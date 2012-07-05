@@ -19,7 +19,8 @@
  */
 package se.nawroth.asciidoc.browser;
 
-import java.awt.BorderLayout;
+import java.awt.EventQueue;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
@@ -34,29 +35,26 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JEditorPane;
 import javax.swing.JFrame;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
 import javax.swing.JTextField;
+import javax.swing.JTree;
+import javax.swing.UIManager;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
+
+import net.miginfocom.swing.MigLayout;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.commons.lang3.StringEscapeUtils;
-import javax.swing.ImageIcon;
-import javax.swing.SwingConstants;
-import com.jgoodies.forms.layout.FormLayout;
-import com.jgoodies.forms.layout.ColumnSpec;
-import com.jgoodies.forms.factories.FormFactory;
-import com.jgoodies.forms.layout.RowSpec;
 
 public class AsciidocBrowserApplication extends JFrame implements
         HyperlinkListener
@@ -65,90 +63,101 @@ public class AsciidocBrowserApplication extends JFrame implements
 
     private static final String LINK_LINE_START = "include::";
 
-    private static final JDialog SETTINGS_DIALOG = new SettingsDialog();
+    private static JDialog settingsDialog;
 
-    private JButton backButton, forwardButton;
+    private final JButton backButton, forwardButton;
 
-    private JTextField locationTextField;
+    private final JTextField locationTextField;
 
-    private JEditorPane displayEditorPane;
+    private final JEditorPane fileEditorPane;
 
-    private List<File> pageList = new ArrayList<File>();
+    private final List<File> pageList = new ArrayList<File>();
 
     private File currentFile;
+    private final JButton btnHomebutton;
+    private final JScrollPane treeScrollPane;
+    private final JTree documentTree;
+    private final JSplitPane splitPane;
 
     public AsciidocBrowserApplication()
     {
         super( "Asciidoc Browser" );
+        setIconImage( Toolkit.getDefaultToolkit()
+                .getImage(
+                        AsciidocBrowserApplication.class.getResource( "/org/freedesktop/tango/16x16/mimetypes/x-office-document.png" ) ) );
 
         setSize( 800, 1024 );
 
         addWindowListener( new WindowAdapter()
         {
-            public void windowClosing( WindowEvent e )
+            @Override
+            public void windowClosing( final WindowEvent e )
             {
                 actionExit();
             }
         } );
-
-        JMenuBar menuBar = new JMenuBar();
-        JMenu fileMenu = new JMenu( "File" );
-        fileMenu.setMnemonic( KeyEvent.VK_F );
-        JMenuItem fileExitMenuItem = new JMenuItem( "Exit", KeyEvent.VK_X );
-        fileExitMenuItem.addActionListener( new ActionListener()
-        {
-            public void actionPerformed( ActionEvent e )
-            {
-                actionExit();
-            }
-        } );
-
-        JMenuItem fileOptionsMenuItem = new JMenuItem( "Options", KeyEvent.VK_O );
-        fileOptionsMenuItem.addActionListener( new ActionListener()
-        {
-            public void actionPerformed( ActionEvent e )
-            {
-                SETTINGS_DIALOG.setVisible( true );
-            }
-        } );
-
-        fileMenu.add( fileOptionsMenuItem );
-        fileMenu.add( fileExitMenuItem );
-        menuBar.add( fileMenu );
-        setJMenuBar( menuBar );
 
         JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout( new FormLayout(
-                new ColumnSpec[] { ColumnSpec.decode( "left:12px" ),
-                        FormFactory.RELATED_GAP_COLSPEC,
-                        ColumnSpec.decode( "57px" ),
-                        ColumnSpec.decode( "9px" ),
-                        ColumnSpec.decode( "56px" ),
-                FormFactory.LABEL_COMPONENT_GAP_COLSPEC,
-                        ColumnSpec.decode( "max(259dlu;min):grow" ),
-                FormFactory.LABEL_COMPONENT_GAP_COLSPEC,
-                        ColumnSpec.decode( "right:56px" ),
-                        FormFactory.RELATED_GAP_COLSPEC,
-                        FormFactory.DEFAULT_COLSPEC, },
-                new RowSpec[] { FormFactory.LINE_GAP_ROWSPEC,
-                        RowSpec.decode( "32px" ), } ) );
         backButton = new JButton( "" );
-        backButton.setHorizontalAlignment( SwingConstants.LEFT );
-        backButton.setIcon(new ImageIcon(AsciidocBrowserApplication.class.getResource("/org/freedesktop/tango/22x22/actions/go-previous.png")));
+        backButton.setIcon( new ImageIcon(
+                AsciidocBrowserApplication.class.getResource( "/org/freedesktop/tango/22x22/actions/go-previous.png" ) ) );
         backButton.addActionListener( new ActionListener()
         {
-            public void actionPerformed( ActionEvent e )
+            @Override
+            public void actionPerformed( final ActionEvent e )
             {
                 actionBack();
             }
         } );
+        buttonPanel.setLayout( new MigLayout( "", "[1px][][][]", "[1px]" ) );
+
+        JButton btnOptionsbutton = new JButton( "" );
+        btnOptionsbutton.addActionListener( new ActionListener()
+        {
+            @Override
+            public void actionPerformed( final ActionEvent e )
+            {
+                settingsDialog.setVisible( true );
+            }
+        } );
+        btnOptionsbutton.setIcon( new ImageIcon(
+                AsciidocBrowserApplication.class.getResource( "/org/freedesktop/tango/22x22/categories/preferences-system.png" ) ) );
+        buttonPanel.add( btnOptionsbutton, "flowx,cell 0 0" );
         backButton.setEnabled( false );
-        buttonPanel.add( backButton, "3, 2, left, top" );
+        buttonPanel.add( backButton, "cell 0 0,grow" );
+        forwardButton = new JButton( "" );
+        forwardButton.setIcon( new ImageIcon(
+                AsciidocBrowserApplication.class.getResource( "/org/freedesktop/tango/22x22/actions/go-next.png" ) ) );
+        forwardButton.addActionListener( new ActionListener()
+        {
+            @Override
+            public void actionPerformed( final ActionEvent e )
+            {
+                actionForward();
+            }
+        } );
+        forwardButton.setEnabled( false );
+        buttonPanel.add( forwardButton, "cell 0 0,grow" );
+        getContentPane().setLayout(
+                new MigLayout( "", "[793.00px,grow]", "[44px][930px]" ) );
+        getContentPane().add( buttonPanel, "cell 0 0,growx,aligny top" );
+        JButton goButton = new JButton( "" );
+        goButton.setIcon( new ImageIcon(
+                AsciidocBrowserApplication.class.getResource( "/org/freedesktop/tango/22x22/categories/applications-internet.png" ) ) );
+        goButton.addActionListener( new ActionListener()
+        {
+            @Override
+            public void actionPerformed( final ActionEvent e )
+            {
+                actionGo();
+            }
+        } );
         locationTextField = new JTextField( 65 );
         locationTextField.setText( Settings.getHome() );
         locationTextField.addKeyListener( new KeyAdapter()
         {
-            public void keyReleased( KeyEvent e )
+            @Override
+            public void keyReleased( final KeyEvent e )
             {
                 if ( e.getKeyCode() == KeyEvent.VK_ENTER )
                 {
@@ -156,44 +165,43 @@ public class AsciidocBrowserApplication extends JFrame implements
                 }
             }
         } );
-        forwardButton = new JButton( "" );
-        forwardButton.setIcon( new ImageIcon(
-                AsciidocBrowserApplication.class.getResource( "/org/freedesktop/tango/22x22/actions/go-next.png" ) ) );
-        forwardButton.addActionListener( new ActionListener()
+
+        btnHomebutton = new JButton( "" );
+        btnHomebutton.addActionListener( new ActionListener()
         {
-            public void actionPerformed( ActionEvent e )
+            @Override
+            public void actionPerformed( final ActionEvent e )
             {
-                actionForward();
+                showFile( Settings.getHome(), true );
             }
         } );
-        forwardButton.setEnabled( false );
-        buttonPanel.add( forwardButton, "5, 2, left, top" );
-        buttonPanel.add( locationTextField, "7, 2, left, center" );
+        btnHomebutton.setIcon( new ImageIcon(
+                AsciidocBrowserApplication.class.getResource( "/org/freedesktop/tango/22x22/actions/go-home.png" ) ) );
+        buttonPanel.add( btnHomebutton, "cell 1 0" );
+        buttonPanel.add( locationTextField, "cell 2 0,grow" );
+        buttonPanel.add( goButton, "flowx,cell 3 0,alignx right,growy" );
 
-        displayEditorPane = new JEditorPane();
-        displayEditorPane.setContentType( "text/html" );
-        displayEditorPane.setEditable( false );
-        displayEditorPane.addHyperlinkListener( this );
+        splitPane = new JSplitPane();
+        splitPane.setResizeWeight( 0.15 );
+        getContentPane().add( splitPane, "cell 0 1,grow" );
 
-        getContentPane().setLayout( new BorderLayout() );
-        getContentPane().add( buttonPanel, BorderLayout.NORTH );
-        JButton goButton = new JButton( "" );
-        goButton.setIcon( new ImageIcon(
-                AsciidocBrowserApplication.class.getResource( "/org/freedesktop/tango/22x22/categories/applications-internet.png" ) ) );
-        goButton.addActionListener( new ActionListener()
-        {
-            public void actionPerformed( ActionEvent e )
-            {
-                actionGo();
-            }
-        } );
-        buttonPanel.add( goButton, "9, 2, left, top" );
-        getContentPane().add( new JScrollPane( displayEditorPane ),
-                BorderLayout.CENTER );
+        treeScrollPane = new JScrollPane();
+        splitPane.setLeftComponent( treeScrollPane );
+
+        documentTree = new DocumentTree();
+        treeScrollPane.setViewportView( documentTree );
+
+        fileEditorPane = new JEditorPane();
+        fileEditorPane.setContentType( "text/html" );
+        fileEditorPane.setEditable( false );
+        fileEditorPane.addHyperlinkListener( this );
+        JScrollPane fileScrollPane = new JScrollPane( fileEditorPane );
+        splitPane.setRightComponent( fileScrollPane );
     }
 
     private void actionExit()
     {
+        settingsDialog.dispose();
         System.exit( 0 );
     }
 
@@ -241,26 +249,22 @@ public class AsciidocBrowserApplication extends JFrame implements
         showFile( file, true );
     }
 
-    private void showFile( File file, boolean addIt )
+    private void showFile( final String file, final boolean addIt )
+    {
+        showFile( FileUtils.getFile( file ), addIt );
+    }
+
+    private void showFile( final File file, final boolean addIt )
     {
         locationTextField.setText( file.getAbsolutePath() );
-        Map<CharSequence, CharSequence> replacements = new HashMap<CharSequence, CharSequence>();
-        for ( String replacementLine : Settings.getReplacements()
-                .split( "\n" ) )
-        {
-            int commaPos = replacementLine.indexOf( ',' );
-            if ( commaPos > 0 )
-            {
-                replacements.put( replacementLine.substring( 0, commaPos ),
-                        replacementLine.substring( commaPos + 1 ) );
-            }
-        }
+        Map<CharSequence, CharSequence> replacements = getReplacements();
         try
         {
             StringBuilder sb = new StringBuilder( 10 * 1024 );
             sb.append( "<html><head><title>"
                        + file.getName()
                        + "</title><style>body {font-size: 1em;}pre {margin: 0;}</style></head><body>" );
+            String parent = file.getParent();
             LineIterator lines = FileUtils.lineIterator( file, "UTF-8" );
             while ( lines.hasNext() )
             {
@@ -268,22 +272,7 @@ public class AsciidocBrowserApplication extends JFrame implements
                 sb.append( "<pre>" );
                 if ( line.startsWith( LINK_LINE_START ) )
                 {
-                    int pos = line.indexOf( "[" );
-                    String href = line.substring( LINK_LINE_START.length(), pos );
-                    String hrefWithReplacements = href;
-                    for ( Entry<CharSequence, CharSequence> entry : replacements.entrySet() )
-                    {
-                        hrefWithReplacements = hrefWithReplacements.replace(
-                                entry.getKey(), entry.getValue() );
-                    }
-                    if ( hrefWithReplacements.equals( href ) )
-                    {
-                        href = file.getParent() + file.separator + href;
-                    }
-                    else
-                    {
-                        href = hrefWithReplacements;
-                    }
+                    String href = getFileLocation( replacements, parent, line );
 
                     sb.append( "<a href=\"" )
                             .append( href )
@@ -300,35 +289,73 @@ public class AsciidocBrowserApplication extends JFrame implements
             sb.append( "</body></html>" );
             lines.close();
 
-            displayEditorPane.setText( sb.toString() );
-            displayEditorPane.setCaretPosition( 0 );
+            fileEditorPane.setText( sb.toString() );
+            fileEditorPane.setCaretPosition( 0 );
+            if ( addIt )
+            {
+                int listSize = pageList.size();
+                if ( listSize > 0 )
+                {
+                    int pageIndex = pageList.indexOf( currentFile );
+                    if ( pageIndex < listSize - 1 )
+                    {
+                        for ( int i = listSize - 1; i > pageIndex; i-- )
+                        {
+                            pageList.remove( i );
+                        }
+                    }
+                }
+                pageList.add( file );
+            }
+            currentFile = file;
+            updateButtons();
         }
         catch ( IOException e )
         {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            showError( "Error in file handling: " + e );
         }
-        if ( addIt )
-        {
-            int listSize = pageList.size();
-            if ( listSize > 0 )
-            {
-                int pageIndex = pageList.indexOf( currentFile );
-                if ( pageIndex < listSize - 1 )
-                {
-                    for ( int i = listSize - 1; i > pageIndex; i-- )
-                    {
-                        pageList.remove( i );
-                    }
-                }
-            }
-            pageList.add( file );
-        }
-        currentFile = file;
-        updateButtons();
     }
 
-    private void showError( String errorMessage )
+    private Map<CharSequence, CharSequence> getReplacements()
+    {
+        Map<CharSequence, CharSequence> replacements = new HashMap<CharSequence, CharSequence>();
+        for ( String replacementLine : Settings.getReplacements()
+                .split( "\n" ) )
+        {
+            int commaPos = replacementLine.indexOf( ',' );
+            if ( commaPos > 0 )
+            {
+                replacements.put( replacementLine.substring( 0, commaPos ),
+                        replacementLine.substring( commaPos + 1 ) );
+            }
+        }
+        return replacements;
+    }
+
+    private String getFileLocation(
+            final Map<CharSequence, CharSequence> replacements,
+            final String parent, final String line )
+    {
+        int pos = line.indexOf( "[" );
+        String href = line.substring( LINK_LINE_START.length(), pos );
+        String hrefWithReplacements = href;
+        for ( Entry<CharSequence, CharSequence> entry : replacements.entrySet() )
+        {
+            hrefWithReplacements = hrefWithReplacements.replace(
+                    entry.getKey(), entry.getValue() );
+        }
+        if ( hrefWithReplacements.equals( href ) )
+        {
+            href = parent + File.separator + href;
+        }
+        else
+        {
+            href = hrefWithReplacements;
+        }
+        return href;
+    }
+
+    private void showError( final String errorMessage )
     {
         JOptionPane.showMessageDialog( this, errorMessage, "Error",
                 JOptionPane.ERROR_MESSAGE );
@@ -349,7 +376,8 @@ public class AsciidocBrowserApplication extends JFrame implements
         }
     }
 
-    public void hyperlinkUpdate( HyperlinkEvent event )
+    @Override
+    public void hyperlinkUpdate( final HyperlinkEvent event )
     {
         HyperlinkEvent.EventType eventType = event.getEventType();
         if ( eventType == HyperlinkEvent.EventType.ACTIVATED )
@@ -359,9 +387,28 @@ public class AsciidocBrowserApplication extends JFrame implements
         }
     }
 
-    public static void main( String[] args )
+    public static void main( final String[] args )
     {
-        AsciidocBrowserApplication browser = new AsciidocBrowserApplication();
-        browser.setVisible( true );
+        EventQueue.invokeLater( new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                try
+                {
+                    JFrame.setDefaultLookAndFeelDecorated( true );
+                    JDialog.setDefaultLookAndFeelDecorated( true );
+                    System.setProperty( "sun.awt.noerasebackground", "true" );
+                    UIManager.setLookAndFeel( new AsciidocBrowserSubstanceSkin() );
+                    AsciidocBrowserApplication browser = new AsciidocBrowserApplication();
+                    browser.setVisible( true );
+                    settingsDialog = new SettingsDialog();
+                }
+                catch ( Exception e )
+                {
+                    e.printStackTrace();
+                }
+            }
+        } );
     }
 }

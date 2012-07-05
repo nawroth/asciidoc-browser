@@ -19,22 +19,19 @@
  */
 package se.nawroth.asciidoc.browser;
 
-import java.awt.BorderLayout;
-import java.awt.FlowLayout;
+import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
-import javax.swing.JPanel;
-import javax.swing.border.EmptyBorder;
-import javax.swing.JLabel;
-import com.jgoodies.forms.layout.FormLayout;
-import com.jgoodies.forms.layout.ColumnSpec;
-import com.jgoodies.forms.layout.RowSpec;
-import com.jgoodies.forms.factories.FormFactory;
-import javax.swing.JTextField;
 import javax.swing.JEditorPane;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.border.EmptyBorder;
+
+import net.miginfocom.swing.MigLayout;
 
 public class SettingsDialog extends JDialog
 {
@@ -44,87 +41,74 @@ public class SettingsDialog extends JDialog
     private JEditorPane replacementsEditorPane;
 
     /**
-     * Launch the application.
-     */
-    public static void main( String[] args )
-    {
-        try
-        {
-            SettingsDialog dialog = new SettingsDialog();
-            dialog.setDefaultCloseOperation( JDialog.DISPOSE_ON_CLOSE );
-            dialog.setVisible( true );
-        }
-        catch ( Exception e )
-        {
-            e.printStackTrace();
-        }
-    }
-
-    /**
      * Create the dialog.
      */
     public SettingsDialog()
     {
+        setDefaultCloseOperation( JDialog.DO_NOTHING_ON_CLOSE );
+        setIconImage( Toolkit.getDefaultToolkit()
+                .getImage(
+                        SettingsDialog.class.getResource( "/org/freedesktop/tango/16x16/categories/preferences-system.png" ) ) );
         setBounds( 100, 100, 700, 300 );
-        getContentPane().setLayout( new BorderLayout() );
+        getContentPane().setLayout(
+                new MigLayout( "", "[698px]", "[236px][35px]" ) );
         contentPanel.setBorder( new EmptyBorder( 5, 5, 5, 5 ) );
-        getContentPane().add( contentPanel, BorderLayout.CENTER );
-        contentPanel.setLayout( new FormLayout( new ColumnSpec[] {
-                FormFactory.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode( "default:grow" ), }, new RowSpec[] {
-                FormFactory.RELATED_GAP_ROWSPEC, FormFactory.DEFAULT_ROWSPEC,
-                FormFactory.RELATED_GAP_ROWSPEC, FormFactory.DEFAULT_ROWSPEC,
-                FormFactory.RELATED_GAP_ROWSPEC, FormFactory.DEFAULT_ROWSPEC,
-                FormFactory.RELATED_GAP_ROWSPEC, FormFactory.DEFAULT_ROWSPEC,
-                FormFactory.RELATED_GAP_ROWSPEC, FormFactory.DEFAULT_ROWSPEC,
-                FormFactory.RELATED_GAP_ROWSPEC,
-                RowSpec.decode( "default:grow" ), } ) );
+        getContentPane().add( contentPanel, "cell 0 0,grow" );
+        contentPanel.setLayout( new MigLayout( "", "[106px,grow,fill]",
+                "[21px][][][grow,fill]" ) );
         {
-            JLabel lblHomeLocation = new JLabel( "Home location:" );
-            contentPanel.add( lblHomeLocation, "2, 2" );
+            JLabel lblHomeLocation = new JLabel( "Home Location:" );
+            contentPanel.add( lblHomeLocation,
+                    "cell 0 0,alignx left,aligny center" );
         }
         {
             homeLocationTextField = new JTextField();
-            contentPanel.add( homeLocationTextField, "2, 4, fill, default" );
+            contentPanel.add( homeLocationTextField,
+                    "cell 0 1,alignx left,aligny center" );
             homeLocationTextField.setColumns( 10 );
         }
         {
-            JLabel lblReplacements = new JLabel( "Include Replacements:" );
-            lblReplacements.setToolTipText( "Replace inside include statements only." );
-            contentPanel.add( lblReplacements, "2, 6" );
+            JLabel lblReplacements = new JLabel( "Include Path Substitutions" );
+            lblReplacements.setToolTipText( "Substitute inside include statements only." );
+            contentPanel.add( lblReplacements,
+                    "cell 0 2,alignx left,aligny center" );
         }
         {
             replacementsEditorPane = new JEditorPane();
-            contentPanel.add( replacementsEditorPane, "2, 10, fill, fill" );
+            contentPanel.add( replacementsEditorPane, "cell 0 3,grow" );
         }
         {
             JPanel buttonPane = new JPanel();
-            buttonPane.setLayout( new FlowLayout( FlowLayout.RIGHT ) );
-            getContentPane().add( buttonPane, BorderLayout.SOUTH );
+            getContentPane().add( buttonPane,
+                    "cell 0 1,alignx right,aligny top" );
             {
                 JButton okButton = new JButton( "OK" );
                 okButton.addActionListener( new ActionListener()
                 {
-                    public void actionPerformed( ActionEvent e )
+                    @Override
+                    public void actionPerformed( final ActionEvent e )
                     {
                         actionOk();
                     }
                 } );
+                buttonPane.setLayout( new MigLayout( "", "[54px][81px]",
+                        "[25px]" ) );
                 okButton.setActionCommand( "OK" );
-                buttonPane.add( okButton );
+                buttonPane.add( okButton, "cell 0 0,alignx right,aligny top" );
                 getRootPane().setDefaultButton( okButton );
             }
             {
                 JButton cancelButton = new JButton( "Cancel" );
                 cancelButton.addActionListener( new ActionListener()
                 {
-                    public void actionPerformed( ActionEvent e )
+                    @Override
+                    public void actionPerformed( final ActionEvent e )
                     {
                         actionCancel();
                     }
                 } );
                 cancelButton.setActionCommand( "Cancel" );
-                buttonPane.add( cancelButton );
+                buttonPane.add( cancelButton, "cell 1 0,alignx left,aligny top" );
             }
         }
         loadSettings();
