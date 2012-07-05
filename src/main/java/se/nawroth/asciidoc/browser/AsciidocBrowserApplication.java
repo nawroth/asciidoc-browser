@@ -30,6 +30,7 @@ import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,6 +50,8 @@ import javax.swing.JTree;
 import javax.swing.UIManager;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -74,10 +77,14 @@ public class AsciidocBrowserApplication extends JFrame implements
     private final List<File> pageList = new ArrayList<File>();
 
     private File currentFile;
-    private final JButton btnHomebutton;
+    private final JButton homebutton;
     private final JScrollPane treeScrollPane;
     private final JTree documentTree;
     private final JSplitPane splitPane;
+
+    private final Map<CharSequence, CharSequence> replacements = new HashMap<CharSequence, CharSequence>();
+
+    private final DefaultTreeModel documentModel;
 
     public AsciidocBrowserApplication()
     {
@@ -150,10 +157,11 @@ public class AsciidocBrowserApplication extends JFrame implements
             public void actionPerformed( final ActionEvent e )
             {
                 actionGo();
+                refreshDocumentTree();
             }
         } );
         locationTextField = new JTextField( 65 );
-        locationTextField.setText( Settings.getHome() );
+        locationTextField.setText( "" );
         locationTextField.addKeyListener( new KeyAdapter()
         {
             @Override
@@ -162,33 +170,37 @@ public class AsciidocBrowserApplication extends JFrame implements
                 if ( e.getKeyCode() == KeyEvent.VK_ENTER )
                 {
                     actionGo();
+                    refreshDocumentTree();
                 }
             }
         } );
 
-        btnHomebutton = new JButton( "" );
-        btnHomebutton.addActionListener( new ActionListener()
+        homebutton = new JButton( "" );
+        homebutton.addActionListener( new ActionListener()
         {
             @Override
             public void actionPerformed( final ActionEvent e )
             {
                 showFile( Settings.getHome(), true );
+                refreshDocumentTree();
             }
         } );
-        btnHomebutton.setIcon( new ImageIcon(
+        homebutton.setIcon( new ImageIcon(
                 AsciidocBrowserApplication.class.getResource( "/org/freedesktop/tango/22x22/actions/go-home.png" ) ) );
-        buttonPanel.add( btnHomebutton, "cell 1 0" );
+        buttonPanel.add( homebutton, "cell 1 0" );
         buttonPanel.add( locationTextField, "cell 2 0,grow" );
         buttonPanel.add( goButton, "flowx,cell 3 0,alignx right,growy" );
 
         splitPane = new JSplitPane();
-        splitPane.setResizeWeight( 0.15 );
+        splitPane.setResizeWeight( 0.3 );
         getContentPane().add( splitPane, "cell 0 1,grow" );
 
         treeScrollPane = new JScrollPane();
         splitPane.setLeftComponent( treeScrollPane );
 
-        documentTree = new DocumentTree();
+        documentModel = new DefaultTreeModel( null );
+        documentTree = new DocumentTree( documentModel );
+        documentTree.putClientProperty( "JTree.lineStyle", "Angled" );
         treeScrollPane.setViewportView( documentTree );
 
         fileEditorPane = new JEditorPane();
@@ -257,7 +269,7 @@ public class AsciidocBrowserApplication extends JFrame implements
     private void showFile( final File file, final boolean addIt )
     {
         locationTextField.setText( file.getAbsolutePath() );
-        Map<CharSequence, CharSequence> replacements = getReplacements();
+        refreshReplacements();
         try
         {
             StringBuilder sb = new StringBuilder( 10 * 1024 );
@@ -272,7 +284,7 @@ public class AsciidocBrowserApplication extends JFrame implements
                 sb.append( "<pre>" );
                 if ( line.startsWith( LINK_LINE_START ) )
                 {
-                    String href = getFileLocation( replacements, parent, line );
+                    String href = getFileLocation( parent, line );
 
                     sb.append( "<a href=\"" )
                             .append( href )
@@ -316,9 +328,63 @@ public class AsciidocBrowserApplication extends JFrame implements
         }
     }
 
-    private Map<CharSequence, CharSequence> getReplacements()
+    private void refreshDocumentTree()
     {
-        Map<CharSequence, CharSequence> replacements = new HashMap<CharSequence, CharSequence>();
+        FileWrapper root = new FileWrapper( this.locationTextField.getText() );
+        DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode( root );
+        addFileWrapperChildren( rootNode );
+        documentModel.setRoot( rootNode );
+    }
+
+    private void addFileWrapperChildren( final DefaultMutableTreeNode rootNode )
+    {
+        FileWrapper parent = (FileWrapper) rootNode.getUserObject();
+        for ( FileWrapper child : getChildren( parent ) )
+        {
+            DefaultMutableTreeNode node = new DefaultMutableTreeNode( child );
+            rootNode.add( node );
+            addFileWrapperChildren( node );
+        }
+    }
+
+    private Collection<FileWrapper> getChildren(
+            final se.nawroth.asciidoc.browser.FileWrapper parent )
+    {
+        List<FileWrapper> children = new ArrayList<FileWrapper>();
+        String directory = parent.getParent();
+        LineIterator lines;
+        try
+        {
+            lines = FileUtils.lineIterator( parent, "UTF-8" );
+            while ( lines.hasNext() )
+            {
+                String line = lines.next();
+                if ( line.startsWith( LINK_LINE_START ) )
+                {
+                    String href = getFileLocation( directory, line );
+                    FileWrapper fileWrapper = new FileWrapper( href );
+                    if ( fileWrapper.exists() )
+                    {
+                        children.add( fileWrapper );
+                    }
+                    else
+                    {
+                        System.out.println( href );
+                    }
+                }
+            }
+        }
+        catch ( IOException e )
+        {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return children;
+    }
+
+    private void refreshReplacements()
+    {
+        replacements.clear();
         for ( String replacementLine : Settings.getReplacements()
                 .split( "\n" ) )
         {
@@ -329,12 +395,9 @@ public class AsciidocBrowserApplication extends JFrame implements
                         replacementLine.substring( commaPos + 1 ) );
             }
         }
-        return replacements;
     }
 
-    private String getFileLocation(
-            final Map<CharSequence, CharSequence> replacements,
-            final String parent, final String line )
+    private String getFileLocation( final String parent, final String line )
     {
         int pos = line.indexOf( "[" );
         String href = line.substring( LINK_LINE_START.length(), pos );
