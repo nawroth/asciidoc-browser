@@ -23,27 +23,51 @@ import java.util.prefs.Preferences;
 
 public class Settings
 {
-    private static final String HOME_LOCATION = "home";
-    private static final String REPLACEMENTS = "replacements";
+    private static final String HOME_LOCATION_KEY = "home";
+    private static final String REPLACEMENTS_KEY = "replacements";
+    private static final String EXCLUDE_START_KEY = "excludeStart";
+    private static final String MAX_FILEPATH_LENGTH_KEY = "maxFilepathLength";
+    static final int MAX_FILEPATH_LENGTH = 50;
     private static final Preferences prefs = Preferences.userNodeForPackage( Settings.class );
 
-    static void setHome( String location )
+    static void setHome( final String location )
     {
-        prefs.put( HOME_LOCATION, location );
+        prefs.put( HOME_LOCATION_KEY, location );
     }
 
     static String getHome()
     {
-        return prefs.get( HOME_LOCATION, "" );
+        return prefs.get( HOME_LOCATION_KEY, "" );
     }
 
-    static void setReplacements( String replacements )
+    static void setReplacements( final String replacements )
     {
-        prefs.put( REPLACEMENTS, replacements );
+        prefs.put( REPLACEMENTS_KEY, replacements );
     }
 
     static String getReplacements()
     {
-        return prefs.get( REPLACEMENTS, "" );
+        return prefs.get( REPLACEMENTS_KEY, "" );
+    }
+
+    static void setExcludeStart( final String start )
+    {
+        prefs.put( EXCLUDE_START_KEY, start );
+    }
+
+    static String getExcludeStart()
+    {
+        return prefs.get( EXCLUDE_START_KEY, "" );
+    }
+
+    static void setMaxFilepathLength( final int length )
+    {
+        prefs.putInt( MAX_FILEPATH_LENGTH_KEY, length );
+    }
+
+    static int getMaxFilepathLength()
+    {
+        return prefs.getInt( MAX_FILEPATH_LENGTH_KEY,
+                Settings.MAX_FILEPATH_LENGTH );
     }
 }

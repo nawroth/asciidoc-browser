@@ -30,6 +30,7 @@ import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -50,8 +51,11 @@ import javax.swing.JTree;
 import javax.swing.UIManager;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreePath;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -85,6 +89,8 @@ public class AsciidocBrowserApplication extends JFrame implements
     private final Map<CharSequence, CharSequence> replacements = new HashMap<CharSequence, CharSequence>();
 
     private final DefaultTreeModel documentModel;
+
+    private final Map<FileWrapper, Object[]> paths = new HashMap<FileWrapper, Object[]>();
 
     public AsciidocBrowserApplication()
     {
@@ -200,7 +206,19 @@ public class AsciidocBrowserApplication extends JFrame implements
 
         documentModel = new DefaultTreeModel( null );
         documentTree = new DocumentTree( documentModel );
-        documentTree.putClientProperty( "JTree.lineStyle", "Angled" );
+        documentTree.addTreeSelectionListener( new TreeSelectionListener()
+        {
+            public void valueChanged( TreeSelectionEvent tse )
+            {
+                TreePath newLeadSelectionPath = tse.getNewLeadSelectionPath();
+                if ( newLeadSelectionPath != null )
+                {
+                    DefaultMutableTreeNode node = (DefaultMutableTreeNode) newLeadSelectionPath.getLastPathComponent();
+                    FileWrapper file = (FileWrapper) node.getUserObject();
+                    showFile( file, true );
+                }
+            }
+        } );
         treeScrollPane.setViewportView( documentTree );
 
         fileEditorPane = new JEditorPane();
@@ -220,24 +238,23 @@ public class AsciidocBrowserApplication extends JFrame implements
     private void actionBack()
     {
         int pageIndex = pageList.indexOf( currentFile );
-        try
+        int pageToShow = pageIndex - 1;
+        if ( pageToShow >= 0 )
         {
-            showFile( pageList.get( pageIndex - 1 ), false );
-        }
-        catch ( Exception e )
-        {
+            showFile( pageList.get( pageToShow ), false );
         }
     }
 
     private void actionForward()
     {
         int pageIndex = pageList.indexOf( currentFile );
-        try
+        if ( pageIndex != -1 )
         {
-            showFile( pageList.get( pageIndex + 1 ), false );
-        }
-        catch ( Exception e )
-        {
+            int pageToShow = pageIndex + 1;
+            if ( pageList.size() > pageToShow )
+            {
+                showFile( pageList.get( pageToShow ), false );
+            }
         }
     }
 
@@ -321,6 +338,10 @@ public class AsciidocBrowserApplication extends JFrame implements
             }
             currentFile = file;
             updateButtons();
+            if ( paths.containsKey( file ) )
+            {
+                documentTree.setSelectionPath( new TreePath( paths.get( file ) ) );
+            }
         }
         catch ( IOException e )
         {
@@ -330,20 +351,27 @@ public class AsciidocBrowserApplication extends JFrame implements
 
     private void refreshDocumentTree()
     {
+        paths.clear();
         FileWrapper root = new FileWrapper( this.locationTextField.getText() );
         DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode( root );
-        addFileWrapperChildren( rootNode );
+        Object[] rootPath = new Object[] { rootNode };
+        paths.put( root, rootPath );
+        addFileWrapperChildren( rootNode, rootPath );
         documentModel.setRoot( rootNode );
     }
 
-    private void addFileWrapperChildren( final DefaultMutableTreeNode rootNode )
+    private void addFileWrapperChildren( final DefaultMutableTreeNode parentNode,
+ Object... parentPath )
     {
-        FileWrapper parent = (FileWrapper) rootNode.getUserObject();
+        FileWrapper parent = (FileWrapper) parentNode.getUserObject();
         for ( FileWrapper child : getChildren( parent ) )
         {
             DefaultMutableTreeNode node = new DefaultMutableTreeNode( child );
-            rootNode.add( node );
-            addFileWrapperChildren( node );
+            parentNode.add( node );
+            Object[] path = Arrays.copyOf( parentPath, parentPath.length + 1 );
+            path[parentPath.length] = node;
+            paths.put( child, path );
+            addFileWrapperChildren( node, path );
         }
     }
 

@@ -23,7 +23,8 @@ import java.io.File;
 
 public class FileWrapper extends File
 {
-    private static final int MAX_STRING_LENGTH = 50;
+    static String excludeStart = Settings.getExcludeStart();
+    static int maxStringLength = Settings.getMaxFilepathLength();
 
     public FileWrapper( final File parent, final String child )
     {
@@ -44,10 +45,14 @@ public class FileWrapper extends File
     public String toString()
     {
         String string = super.toString();
-        int length = string.length();
-        if ( length > MAX_STRING_LENGTH )
+        if ( !excludeStart.isEmpty() && string.startsWith( excludeStart ) )
         {
-            return "..." + string.substring( length - MAX_STRING_LENGTH );
+            string = string.substring( excludeStart.length() );
+        }
+        int length = string.length();
+        if ( length > maxStringLength )
+        {
+            return "..." + string.substring( length - maxStringLength );
         }
         return string;
     }

@@ -28,6 +28,7 @@ import javax.swing.JDialog;
 import javax.swing.JEditorPane;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JSpinner;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 
@@ -39,6 +40,8 @@ public class SettingsDialog extends JDialog
     private final JPanel contentPanel = new JPanel();
     private JTextField homeLocationTextField;
     private JEditorPane replacementsEditorPane;
+    private JTextField excludeAtStartTextField;
+    private JSpinner pathLengthSpinner;
 
     /**
      * Create the dialog.
@@ -49,13 +52,13 @@ public class SettingsDialog extends JDialog
         setIconImage( Toolkit.getDefaultToolkit()
                 .getImage(
                         SettingsDialog.class.getResource( "/org/freedesktop/tango/16x16/categories/preferences-system.png" ) ) );
-        setBounds( 100, 100, 700, 300 );
+        setBounds( 100, 100, 698, 416 );
         getContentPane().setLayout(
-                new MigLayout( "", "[698px]", "[236px][35px]" ) );
+                new MigLayout( "", "[698px]", "[236px,grow][35px]" ) );
         contentPanel.setBorder( new EmptyBorder( 5, 5, 5, 5 ) );
         getContentPane().add( contentPanel, "cell 0 0,grow" );
         contentPanel.setLayout( new MigLayout( "", "[106px,grow,fill]",
-                "[21px][][][grow,fill]" ) );
+                "[21px][][][][][][grow,fill]" ) );
         {
             JLabel lblHomeLocation = new JLabel( "Home Location:" );
             contentPanel.add( lblHomeLocation,
@@ -68,19 +71,40 @@ public class SettingsDialog extends JDialog
             homeLocationTextField.setColumns( 10 );
         }
         {
+            JLabel lblExcludeAtStart = new JLabel(
+                    "Exclude at start of location:" );
+            contentPanel.add( lblExcludeAtStart, "cell 0 2" );
+        }
+        {
+            excludeAtStartTextField = new JTextField();
+            contentPanel.add( excludeAtStartTextField, "flowx,cell 0 3" );
+            excludeAtStartTextField.setColumns( 10 );
+        }
+        {
+            JLabel lblMaxFilepathLength = new JLabel(
+                    "Max filepath length to show:" );
+            contentPanel.add( lblMaxFilepathLength,
+                    "flowx,cell 0 4,alignx left" );
+        }
+        {
             JLabel lblReplacements = new JLabel( "Include Path Substitutions" );
             lblReplacements.setToolTipText( "Substitute inside include statements only." );
             contentPanel.add( lblReplacements,
-                    "cell 0 2,alignx left,aligny center" );
+                    "cell 0 5,alignx left,aligny center" );
         }
         {
             replacementsEditorPane = new JEditorPane();
-            contentPanel.add( replacementsEditorPane, "cell 0 3,grow" );
+            contentPanel.add( replacementsEditorPane, "cell 0 6,grow" );
+        }
+        {
+            pathLengthSpinner = new JSpinner();
+            pathLengthSpinner.setValue( Settings.getMaxFilepathLength() );
+            contentPanel.add( pathLengthSpinner, "cell 0 4,alignx left" );
         }
         {
             JPanel buttonPane = new JPanel();
             getContentPane().add( buttonPane,
-                    "cell 0 1,alignx right,aligny top" );
+                    "cell 0 1,alignx right,aligny bottom" );
             {
                 JButton okButton = new JButton( "OK" );
                 okButton.addActionListener( new ActionListener()
@@ -118,12 +142,16 @@ public class SettingsDialog extends JDialog
     {
         homeLocationTextField.setText( Settings.getHome() );
         replacementsEditorPane.setText( Settings.getReplacements() );
+        excludeAtStartTextField.setText( Settings.getExcludeStart() );
+        pathLengthSpinner.setValue( Settings.getMaxFilepathLength() );
     }
 
     private void actionOk()
     {
         Settings.setHome( homeLocationTextField.getText() );
         Settings.setReplacements( replacementsEditorPane.getText() );
+        Settings.setExcludeStart( excludeAtStartTextField.getText() );
+        Settings.setMaxFilepathLength( (Integer) pathLengthSpinner.getValue() );
         setVisible( false );
     }
 
