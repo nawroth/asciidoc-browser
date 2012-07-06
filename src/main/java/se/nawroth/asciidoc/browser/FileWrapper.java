@@ -52,7 +52,7 @@ public class FileWrapper extends File
         int length = string.length();
         if ( length > maxStringLength )
         {
-            return "..." + string.substring( length - maxStringLength );
+            string = "..." + string.substring( length - maxStringLength );
         }
         return string;
     }

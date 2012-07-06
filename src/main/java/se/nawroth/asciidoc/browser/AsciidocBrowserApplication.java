@@ -208,7 +208,8 @@ public class AsciidocBrowserApplication extends JFrame implements
         documentTree = new DocumentTree( documentModel );
         documentTree.addTreeSelectionListener( new TreeSelectionListener()
         {
-            public void valueChanged( TreeSelectionEvent tse )
+            @Override
+            public void valueChanged( final TreeSelectionEvent tse )
             {
                 TreePath newLeadSelectionPath = tse.getNewLeadSelectionPath();
                 if ( newLeadSelectionPath != null )
@@ -360,8 +361,8 @@ public class AsciidocBrowserApplication extends JFrame implements
         documentModel.setRoot( rootNode );
     }
 
-    private void addFileWrapperChildren( final DefaultMutableTreeNode parentNode,
- Object... parentPath )
+    private void addFileWrapperChildren(
+            final DefaultMutableTreeNode parentNode, final Object... parentPath )
     {
         FileWrapper parent = (FileWrapper) parentNode.getUserObject();
         for ( FileWrapper child : getChildren( parent ) )

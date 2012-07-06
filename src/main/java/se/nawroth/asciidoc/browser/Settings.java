@@ -53,6 +53,7 @@ public class Settings
     static void setExcludeStart( final String start )
     {
         prefs.put( EXCLUDE_START_KEY, start );
+        FileWrapper.excludeStart = start;
     }
 
     static String getExcludeStart()
@@ -63,6 +64,7 @@ public class Settings
     static void setMaxFilepathLength( final int length )
     {
         prefs.putInt( MAX_FILEPATH_LENGTH_KEY, length );
+        FileWrapper.maxStringLength = length;
     }
 
     static int getMaxFilepathLength()

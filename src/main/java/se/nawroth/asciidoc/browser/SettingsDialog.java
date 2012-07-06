@@ -148,11 +148,11 @@ public class SettingsDialog extends JDialog
 
     private void actionOk()
     {
+        setVisible( false );
         Settings.setHome( homeLocationTextField.getText() );
         Settings.setReplacements( replacementsEditorPane.getText() );
         Settings.setExcludeStart( excludeAtStartTextField.getText() );
         Settings.setMaxFilepathLength( (Integer) pathLengthSpinner.getValue() );
-        setVisible( false );
     }
 
     private void actionCancel()
