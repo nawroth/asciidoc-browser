@@ -38,6 +38,7 @@ import net.miginfocom.swing.MigLayout;
 @SuppressWarnings( "serial" )
 public class SettingsDialog extends JDialog
 {
+    private static final String OPTIONS_ICON = "/org/freedesktop/tango/16x16/categories/preferences-system.png";
     private final JPanel contentPanel = new JPanel();
     private JTextField homeLocationTextField;
     private JEditorPane replacementsEditorPane;
@@ -52,7 +53,7 @@ public class SettingsDialog extends JDialog
         setDefaultCloseOperation( WindowConstants.DO_NOTHING_ON_CLOSE );
         setIconImage( Toolkit.getDefaultToolkit()
                 .getImage(
-                        SettingsDialog.class.getResource( "/org/freedesktop/tango/16x16/categories/preferences-system.png" ) ) );
+                        SettingsDialog.class.getResource( OPTIONS_ICON ) ) );
         setBounds( 100, 100, 698, 416 );
         getContentPane().setLayout(
                 new MigLayout( "", "[698px]", "[236px,grow][35px]" ) );
