@@ -30,13 +30,14 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
 import javax.swing.JTextField;
+import javax.swing.WindowConstants;
 import javax.swing.border.EmptyBorder;
 
 import net.miginfocom.swing.MigLayout;
 
+@SuppressWarnings( "serial" )
 public class SettingsDialog extends JDialog
 {
-    private static final long serialVersionUID = 1L;
     private final JPanel contentPanel = new JPanel();
     private JTextField homeLocationTextField;
     private JEditorPane replacementsEditorPane;
@@ -48,7 +49,7 @@ public class SettingsDialog extends JDialog
      */
     public SettingsDialog()
     {
-        setDefaultCloseOperation( JDialog.DO_NOTHING_ON_CLOSE );
+        setDefaultCloseOperation( WindowConstants.DO_NOTHING_ON_CLOSE );
         setIconImage( Toolkit.getDefaultToolkit()
                 .getImage(
                         SettingsDialog.class.getResource( "/org/freedesktop/tango/16x16/categories/preferences-system.png" ) ) );

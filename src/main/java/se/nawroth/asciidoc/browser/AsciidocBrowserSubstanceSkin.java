@@ -21,8 +21,8 @@ package se.nawroth.asciidoc.browser;
 
 import org.pushingpixels.substance.api.skin.SubstanceBusinessBlueSteelLookAndFeel;
 
+@SuppressWarnings( "serial" )
 public class AsciidocBrowserSubstanceSkin extends
         SubstanceBusinessBlueSteelLookAndFeel
 {
-    private static final long serialVersionUID = 1L;
 }

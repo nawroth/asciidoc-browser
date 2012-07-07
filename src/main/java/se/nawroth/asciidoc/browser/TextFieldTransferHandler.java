@@ -28,6 +28,7 @@ import javax.swing.Icon;
 import javax.swing.JComponent;
 import javax.swing.TransferHandler;
 
+@SuppressWarnings( "serial" )
 final class TextFieldTransferHandler extends TransferHandler
 {
     private final TransferHandler oldTransferHandler;

@@ -25,10 +25,9 @@ import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreeSelectionModel;
 
+@SuppressWarnings( "serial" )
 public class DocumentTree extends JTree
 {
-    private static final long serialVersionUID = 1L;
-
     public DocumentTree( final TreeModel newModel )
     {
         super( newModel );

@@ -64,14 +64,22 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.commons.lang3.StringEscapeUtils;
 
-public class AsciidocBrowserApplication extends JFrame implements
-HyperlinkListener
+@SuppressWarnings( "serial" )
+public class AsciidocBrowserApplication extends JFrame
 {
+    private static final String HOME_ICON = "/org/freedesktop/tango/22x22/actions/go-home.png";
+
+    private static final String FORWARD_ICON = "/org/freedesktop/tango/22x22/actions/go-next.png";
+
+    private static final String OPTIONS_ICON = "/org/freedesktop/tango/22x22/categories/preferences-system.png";
+
+    private static final String BACK_ICON = "/org/freedesktop/tango/22x22/actions/go-previous.png";
+
+    private static final String APPLICATION_ICON = "/org/freedesktop/tango/16x16/mimetypes/x-office-document.png";
+
     private static final int INITIAL_TOOLTIP_DELAY = 500;
 
     private static final String FILE_URI_SCHEMA = "file://";
-
-    private static final long serialVersionUID = 1L;
 
     private static final String LINK_LINE_START = "include::";
 
@@ -97,12 +105,14 @@ HyperlinkListener
 
     private final Map<FileWrapper, Object[]> paths = new HashMap<FileWrapper, Object[]>();
 
+    private TreePath currentSelectionPath;
+
     public AsciidocBrowserApplication()
     {
         super( "Asciidoc Browser" );
         setIconImage( Toolkit.getDefaultToolkit()
                 .getImage(
-                        AsciidocBrowserApplication.class.getResource( "/org/freedesktop/tango/16x16/mimetypes/x-office-document.png" ) ) );
+                        AsciidocBrowserApplication.class.getResource( APPLICATION_ICON ) ) );
 
         setSize( 1024, 800 );
 
@@ -118,7 +128,7 @@ HyperlinkListener
         JPanel buttonPanel = new JPanel();
         backButton = new JButton( "" );
         backButton.setIcon( new ImageIcon(
-                AsciidocBrowserApplication.class.getResource( "/org/freedesktop/tango/22x22/actions/go-previous.png" ) ) );
+                AsciidocBrowserApplication.class.getResource( BACK_ICON ) ) );
         backButton.addActionListener( new ActionListener()
         {
             @Override
@@ -139,13 +149,13 @@ HyperlinkListener
             }
         } );
         btnOptionsbutton.setIcon( new ImageIcon(
-                AsciidocBrowserApplication.class.getResource( "/org/freedesktop/tango/22x22/categories/preferences-system.png" ) ) );
+                AsciidocBrowserApplication.class.getResource( OPTIONS_ICON ) ) );
         buttonPanel.add( btnOptionsbutton, "flowx,cell 0 0" );
         backButton.setEnabled( false );
         buttonPanel.add( backButton, "cell 0 0,grow" );
         forwardButton = new JButton( "" );
         forwardButton.setIcon( new ImageIcon(
-                AsciidocBrowserApplication.class.getResource( "/org/freedesktop/tango/22x22/actions/go-next.png" ) ) );
+                AsciidocBrowserApplication.class.getResource( FORWARD_ICON ) ) );
         forwardButton.addActionListener( new ActionListener()
         {
             @Override
@@ -159,18 +169,6 @@ HyperlinkListener
         getContentPane().setLayout(
                 new MigLayout( "", "[793.00px,grow]", "[44px][930px]" ) );
         getContentPane().add( buttonPanel, "cell 0 0,growx,aligny top" );
-        JButton goButton = new JButton( "" );
-        goButton.setIcon( new ImageIcon(
-                AsciidocBrowserApplication.class.getResource( "/org/freedesktop/tango/22x22/categories/applications-internet.png" ) ) );
-        goButton.addActionListener( new ActionListener()
-        {
-            @Override
-            public void actionPerformed( final ActionEvent e )
-            {
-                actionGo();
-                refreshDocumentTree();
-            }
-        } );
         locationTextField = new JTextField( 65 );
         locationTextField.setText( "" );
         locationTextField.addKeyListener( new KeyAdapter()
@@ -217,10 +215,9 @@ HyperlinkListener
             }
         } );
         homebutton.setIcon( new ImageIcon(
-                AsciidocBrowserApplication.class.getResource( "/org/freedesktop/tango/22x22/actions/go-home.png" ) ) );
+                AsciidocBrowserApplication.class.getResource( HOME_ICON ) ) );
         buttonPanel.add( homebutton, "cell 1 0" );
         buttonPanel.add( locationTextField, "cell 2 0,grow" );
-        buttonPanel.add( goButton, "flowx,cell 3 0,alignx right,growy" );
 
         splitPane = new JSplitPane();
         splitPane.setResizeWeight( 0.3 );
@@ -232,16 +229,19 @@ HyperlinkListener
         documentTree = new DocumentTree( documentModel );
         documentTree.setCellRenderer( new TooltipsTreeCellRenderer() );
         ToolTipManager.sharedInstance()
-        .registerComponent( documentTree );
+                .registerComponent( documentTree );
         ToolTipManager.sharedInstance()
-        .setInitialDelay( INITIAL_TOOLTIP_DELAY );
+                .setInitialDelay( INITIAL_TOOLTIP_DELAY );
+        ToolTipManager.sharedInstance()
+                .setReshowDelay( 0 );
         documentTree.addTreeSelectionListener( new TreeSelectionListener()
         {
             @Override
             public void valueChanged( final TreeSelectionEvent tse )
             {
                 TreePath newLeadSelectionPath = tse.getNewLeadSelectionPath();
-                if ( newLeadSelectionPath != null )
+                if ( newLeadSelectionPath != null
+                     && !newLeadSelectionPath.equals( currentSelectionPath ) )
                 {
                     DefaultMutableTreeNode node = (DefaultMutableTreeNode) newLeadSelectionPath.getLastPathComponent();
                     FileWrapper file = (FileWrapper) node.getUserObject();
@@ -254,7 +254,7 @@ HyperlinkListener
         fileEditorPane = new JEditorPane();
         fileEditorPane.setContentType( "text/html" );
         fileEditorPane.setEditable( false );
-        fileEditorPane.addHyperlinkListener( this );
+        fileEditorPane.addHyperlinkListener( new HandleHyperlinkUpdate() );
         JScrollPane fileScrollPane = new JScrollPane( fileEditorPane );
         splitPane.setRightComponent( fileScrollPane );
     }
@@ -293,7 +293,7 @@ HyperlinkListener
         String location = locationTextField.getText()
                 .trim();
         if ( location.startsWith( FILE_URI_SCHEMA )
-                && location.length() > FILE_URI_SCHEMA.length() )
+             && location.length() > FILE_URI_SCHEMA.length() )
         {
             location = location.substring( FILE_URI_SCHEMA.length() );
             locationTextField.setText( location );
@@ -324,8 +324,8 @@ HyperlinkListener
         {
             StringBuilder sb = new StringBuilder( 10 * 1024 );
             sb.append( "<html><head><title>"
-                    + file.getName()
-                    + "</title><style>body {font-size: 1em;}pre {margin: 0;}</style></head><body>" );
+                       + file.getName()
+                       + "</title><style>body {font-size: 1em;}pre {margin: 0;}</style></head><body>" );
             String parent = file.getParent();
             LineIterator lines = FileUtils.lineIterator( file, "UTF-8" );
             while ( lines.hasNext() )
@@ -337,10 +337,10 @@ HyperlinkListener
                     String href = getFileLocation( parent, line );
 
                     sb.append( "<a href=\"" )
-                    .append( href )
-                    .append( "\">" )
-                    .append( line )
-                    .append( "</a>" );
+                            .append( href )
+                            .append( "\">" )
+                            .append( line )
+                            .append( "</a>" );
                 }
                 else
                 {
@@ -373,7 +373,8 @@ HyperlinkListener
             updateButtons();
             if ( paths.containsKey( file ) )
             {
-                documentTree.setSelectionPath( new TreePath( paths.get( file ) ) );
+                currentSelectionPath = new TreePath( paths.get( file ) );
+                documentTree.setSelectionPath( currentSelectionPath );
             }
         }
         catch ( IOException e )
@@ -410,7 +411,7 @@ HyperlinkListener
 
     private Collection<FileWrapper> getChildren(
             final se.nawroth.asciidoc.browser.FileWrapper parent )
-            {
+    {
         List<FileWrapper> children = new ArrayList<FileWrapper>();
         String directory = parent.getParent();
         LineIterator lines;
@@ -441,7 +442,7 @@ HyperlinkListener
             e.printStackTrace();
         }
         return children;
-            }
+    }
 
     private void refreshReplacements()
     {
@@ -500,14 +501,17 @@ HyperlinkListener
         }
     }
 
-    @Override
-    public void hyperlinkUpdate( final HyperlinkEvent event )
+    private class HandleHyperlinkUpdate implements HyperlinkListener
     {
-        HyperlinkEvent.EventType eventType = event.getEventType();
-        if ( eventType == HyperlinkEvent.EventType.ACTIVATED )
+        @Override
+        public void hyperlinkUpdate( final HyperlinkEvent event )
         {
-            locationTextField.setText( event.getDescription() );
-            actionGo();
+            HyperlinkEvent.EventType eventType = event.getEventType();
+            if ( eventType == HyperlinkEvent.EventType.ACTIVATED )
+            {
+                locationTextField.setText( event.getDescription() );
+                actionGo();
+            }
         }
     }
 

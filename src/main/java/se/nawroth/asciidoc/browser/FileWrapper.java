@@ -21,6 +21,7 @@ package se.nawroth.asciidoc.browser;
 
 import java.io.File;
 
+@SuppressWarnings( "serial" )
 public class FileWrapper extends File
 {
     static String excludeStart = Settings.getExcludeStart();
@@ -56,6 +57,4 @@ public class FileWrapper extends File
         }
         return string;
     }
-
-    private static final long serialVersionUID = 1L;
 }
