@@ -66,6 +66,8 @@ import org.apache.commons.lang3.StringEscapeUtils;
 public class AsciidocBrowserApplication extends JFrame implements
         HyperlinkListener
 {
+    private static final String FILE_URI_SCHEMA = "file://";
+
     private static final long serialVersionUID = 1L;
 
     private static final String LINK_LINE_START = "include::";
@@ -173,13 +175,32 @@ public class AsciidocBrowserApplication extends JFrame implements
             @Override
             public void keyReleased( final KeyEvent e )
             {
-                if ( e.getKeyCode() == KeyEvent.VK_ENTER )
+                int keyCode = e.getKeyCode();
+                if ( keyCode == KeyEvent.VK_ENTER || keyCode == KeyEvent.VK_TAB )
                 {
                     actionGo();
                     refreshDocumentTree();
                 }
             }
         } );
+        locationTextField.setTransferHandler( new TextFieldTransferHandler(
+                locationTextField.getTransferHandler(), new Runnable()
+                {
+                    @Override
+                    public void run()
+                    {
+                        locationTextField.setText( "" );
+                    }
+                }, new Runnable()
+                {
+
+                    @Override
+                    public void run()
+                    {
+                        actionGo();
+                        refreshDocumentTree();
+                    }
+                } ) );
 
         homebutton = new JButton( "" );
         homebutton.addActionListener( new ActionListener()
@@ -187,7 +208,8 @@ public class AsciidocBrowserApplication extends JFrame implements
             @Override
             public void actionPerformed( final ActionEvent e )
             {
-                showFile( Settings.getHome(), true );
+                locationTextField.setText( Settings.getHome() );
+                actionGo();
                 refreshDocumentTree();
             }
         } );
@@ -261,10 +283,17 @@ public class AsciidocBrowserApplication extends JFrame implements
 
     private void actionGo()
     {
-        File file = FileUtils.getFile( locationTextField.getText() );
+        String location = locationTextField.getText()
+                .trim();
+        if ( location.startsWith( FILE_URI_SCHEMA )
+             && location.length() > FILE_URI_SCHEMA.length() )
+        {
+            location = location.substring( FILE_URI_SCHEMA.length() );
+        }
+        File file = FileUtils.getFile( location );
         if ( !file.exists() )
         {
-            showError( "FIle doesn't exist: " + file );
+            showError( "File doesn't exist: " + file.getAbsolutePath() );
             return;
         }
         if ( file.isDirectory() )
@@ -276,12 +305,9 @@ public class AsciidocBrowserApplication extends JFrame implements
         {
             showError( "Cannot read the file: " + file );
         }
+        locationTextField.setText( location );
+        System.out.println( "lets show the file!" );
         showFile( file, true );
-    }
-
-    private void showFile( final String file, final boolean addIt )
-    {
-        showFile( FileUtils.getFile( file ), addIt );
     }
 
     private void showFile( final File file, final boolean addIt )

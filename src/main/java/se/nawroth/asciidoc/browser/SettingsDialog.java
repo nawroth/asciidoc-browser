@@ -66,6 +66,15 @@ public class SettingsDialog extends JDialog
         }
         {
             homeLocationTextField = new JTextField();
+            homeLocationTextField.setTransferHandler( new TextFieldTransferHandler(
+                    homeLocationTextField.getTransferHandler(), new Runnable()
+                    {
+                        @Override
+                        public void run()
+                        {
+                            homeLocationTextField.setText( "" );
+                        }
+                    }, null ) );
             contentPanel.add( homeLocationTextField,
                     "cell 0 1,alignx left,aligny center" );
             homeLocationTextField.setColumns( 10 );
@@ -77,6 +86,16 @@ public class SettingsDialog extends JDialog
         }
         {
             excludeAtStartTextField = new JTextField();
+            excludeAtStartTextField.setTransferHandler( new TextFieldTransferHandler(
+                    excludeAtStartTextField.getTransferHandler(),
+                    new Runnable()
+                    {
+                        @Override
+                        public void run()
+                        {
+                            excludeAtStartTextField.setText( "" );
+                        }
+                    }, null ) );
             contentPanel.add( excludeAtStartTextField, "flowx,cell 0 3" );
             excludeAtStartTextField.setColumns( 10 );
         }
