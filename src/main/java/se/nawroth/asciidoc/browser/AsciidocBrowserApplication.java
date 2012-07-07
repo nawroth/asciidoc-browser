@@ -48,6 +48,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextField;
 import javax.swing.JTree;
+import javax.swing.ToolTipManager;
 import javax.swing.UIManager;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
@@ -64,8 +65,10 @@ import org.apache.commons.io.LineIterator;
 import org.apache.commons.lang3.StringEscapeUtils;
 
 public class AsciidocBrowserApplication extends JFrame implements
-        HyperlinkListener
+HyperlinkListener
 {
+    private static final int INITIAL_TOOLTIP_DELAY = 500;
+
     private static final String FILE_URI_SCHEMA = "file://";
 
     private static final long serialVersionUID = 1L;
@@ -90,7 +93,7 @@ public class AsciidocBrowserApplication extends JFrame implements
 
     private final Map<CharSequence, CharSequence> replacements = new HashMap<CharSequence, CharSequence>();
 
-    private final DefaultTreeModel documentModel;
+    private final DefaultTreeModel documentModel = new DefaultTreeModel( null );
 
     private final Map<FileWrapper, Object[]> paths = new HashMap<FileWrapper, Object[]>();
 
@@ -101,7 +104,7 @@ public class AsciidocBrowserApplication extends JFrame implements
                 .getImage(
                         AsciidocBrowserApplication.class.getResource( "/org/freedesktop/tango/16x16/mimetypes/x-office-document.png" ) ) );
 
-        setSize( 800, 1024 );
+        setSize( 1024, 800 );
 
         addWindowListener( new WindowAdapter()
         {
@@ -226,8 +229,12 @@ public class AsciidocBrowserApplication extends JFrame implements
         treeScrollPane = new JScrollPane();
         splitPane.setLeftComponent( treeScrollPane );
 
-        documentModel = new DefaultTreeModel( null );
         documentTree = new DocumentTree( documentModel );
+        documentTree.setCellRenderer( new TooltipsTreeCellRenderer() );
+        ToolTipManager.sharedInstance()
+        .registerComponent( documentTree );
+        ToolTipManager.sharedInstance()
+        .setInitialDelay( INITIAL_TOOLTIP_DELAY );
         documentTree.addTreeSelectionListener( new TreeSelectionListener()
         {
             @Override
@@ -286,9 +293,10 @@ public class AsciidocBrowserApplication extends JFrame implements
         String location = locationTextField.getText()
                 .trim();
         if ( location.startsWith( FILE_URI_SCHEMA )
-             && location.length() > FILE_URI_SCHEMA.length() )
+                && location.length() > FILE_URI_SCHEMA.length() )
         {
             location = location.substring( FILE_URI_SCHEMA.length() );
+            locationTextField.setText( location );
         }
         File file = FileUtils.getFile( location );
         if ( !file.exists() )
@@ -305,8 +313,6 @@ public class AsciidocBrowserApplication extends JFrame implements
         {
             showError( "Cannot read the file: " + file );
         }
-        locationTextField.setText( location );
-        System.out.println( "lets show the file!" );
         showFile( file, true );
     }
 
@@ -318,8 +324,8 @@ public class AsciidocBrowserApplication extends JFrame implements
         {
             StringBuilder sb = new StringBuilder( 10 * 1024 );
             sb.append( "<html><head><title>"
-                       + file.getName()
-                       + "</title><style>body {font-size: 1em;}pre {margin: 0;}</style></head><body>" );
+                    + file.getName()
+                    + "</title><style>body {font-size: 1em;}pre {margin: 0;}</style></head><body>" );
             String parent = file.getParent();
             LineIterator lines = FileUtils.lineIterator( file, "UTF-8" );
             while ( lines.hasNext() )
@@ -331,10 +337,10 @@ public class AsciidocBrowserApplication extends JFrame implements
                     String href = getFileLocation( parent, line );
 
                     sb.append( "<a href=\"" )
-                            .append( href )
-                            .append( "\">" )
-                            .append( line )
-                            .append( "</a>" );
+                    .append( href )
+                    .append( "\">" )
+                    .append( line )
+                    .append( "</a>" );
                 }
                 else
                 {
@@ -404,7 +410,7 @@ public class AsciidocBrowserApplication extends JFrame implements
 
     private Collection<FileWrapper> getChildren(
             final se.nawroth.asciidoc.browser.FileWrapper parent )
-    {
+            {
         List<FileWrapper> children = new ArrayList<FileWrapper>();
         String directory = parent.getParent();
         LineIterator lines;
@@ -435,7 +441,7 @@ public class AsciidocBrowserApplication extends JFrame implements
             e.printStackTrace();
         }
         return children;
-    }
+            }
 
     private void refreshReplacements()
     {
