@@ -230,11 +230,11 @@ public class AsciidocBrowserApplication extends JFrame
         documentTree = new DocumentTree( documentModel );
         documentTree.setCellRenderer( new TooltipsTreeCellRenderer() );
         ToolTipManager.sharedInstance()
-        .registerComponent( documentTree );
+                .registerComponent( documentTree );
         ToolTipManager.sharedInstance()
-        .setInitialDelay( INITIAL_TOOLTIP_DELAY );
+                .setInitialDelay( INITIAL_TOOLTIP_DELAY );
         ToolTipManager.sharedInstance()
-        .setReshowDelay( 0 );
+                .setReshowDelay( 0 );
         documentTree.addTreeSelectionListener( new TreeSelectionListener()
         {
             @Override
@@ -242,7 +242,7 @@ public class AsciidocBrowserApplication extends JFrame
             {
                 TreePath newLeadSelectionPath = tse.getNewLeadSelectionPath();
                 if ( newLeadSelectionPath != null
-                        && !newLeadSelectionPath.equals( currentSelectionPath ) )
+                     && !newLeadSelectionPath.equals( currentSelectionPath ) )
                 {
                     DefaultMutableTreeNode node = (DefaultMutableTreeNode) newLeadSelectionPath.getLastPathComponent();
                     FileWrapper file = (FileWrapper) node.getUserObject();
@@ -335,7 +335,7 @@ public class AsciidocBrowserApplication extends JFrame
         String location = locationTextField.getText()
                 .trim();
         if ( location.startsWith( FILE_URI_SCHEMA )
-                && location.length() > FILE_URI_SCHEMA.length() )
+             && location.length() > FILE_URI_SCHEMA.length() )
         {
             location = location.substring( FILE_URI_SCHEMA.length() );
             locationTextField.setText( location );
@@ -366,8 +366,8 @@ public class AsciidocBrowserApplication extends JFrame
         {
             StringBuilder sb = new StringBuilder( 10 * 1024 );
             sb.append( "<html><head><title>"
-                    + file.getName()
-                    + "</title><style>body {font-size: 1em;}pre {margin: 0;}</style></head><body>" );
+                       + file.getName()
+                       + "</title><style>body {font-size: 1em;}pre {margin: 0;}</style></head><body>" );
             String parent = file.getParent();
             LineIterator lines = FileUtils.lineIterator( file, "UTF-8" );
             while ( lines.hasNext() )
@@ -379,10 +379,10 @@ public class AsciidocBrowserApplication extends JFrame
                     String href = getFileLocation( parent, line );
 
                     sb.append( "<a href=\"" )
-                    .append( href )
-                    .append( "\">" )
-                    .append( line )
-                    .append( "</a>" );
+                            .append( href )
+                            .append( "\">" )
+                            .append( line )
+                            .append( "</a>" );
                 }
                 else
                 {
@@ -453,7 +453,7 @@ public class AsciidocBrowserApplication extends JFrame
 
     private Collection<FileWrapper> getChildren(
             final se.nawroth.asciidoc.browser.FileWrapper parent )
-            {
+    {
         List<FileWrapper> children = new ArrayList<FileWrapper>();
         String directory = parent.getParent();
         LineIterator lines;
@@ -484,7 +484,7 @@ public class AsciidocBrowserApplication extends JFrame
             e.printStackTrace();
         }
         return children;
-            }
+    }
 
     private void refreshReplacements()
     {
