@@ -35,6 +35,8 @@ public class AsciidocExecutor
     private static final PySystemState pySys = new PySystemState();
     private static final PyList argv = pySys.argv;
 
+    private final PythonInterpreter python;
+
     private File targetFile;
 
     AsciidocExecutor()
@@ -48,9 +50,10 @@ public class AsciidocExecutor
         {
             ioe.printStackTrace();
         }
+        python = new PythonInterpreter( null, pySys );
     }
 
-    void generate( final String documentPath )
+    File generate( final String documentPath )
     {
         argv.clear();
         argv.append( new PyString( "" ) );
@@ -59,13 +62,8 @@ public class AsciidocExecutor
         argv.append( new PyString( "--out-file" ) );
         argv.append( new PyString( targetFile.getAbsolutePath() ) );
         argv.append( new PyString( documentPath ) );
-        PythonInterpreter python = new PythonInterpreter( null, pySys );
         python.set( "__file__", asciidoc.getAbsolutePath() );
         python.execfile( asciidoc.getAbsolutePath() );
-    }
-
-    File getTargetFile()
-    {
         return targetFile;
     }
 }

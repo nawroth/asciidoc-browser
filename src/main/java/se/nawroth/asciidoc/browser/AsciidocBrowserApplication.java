@@ -51,6 +51,7 @@ import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.JTree;
+import javax.swing.SwingConstants;
 import javax.swing.ToolTipManager;
 import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
@@ -106,6 +107,8 @@ public class AsciidocBrowserApplication extends JFrame
     private final JScrollPane previewScrollPane;
 
     private final XHTMLPanel xhtmlPanel;
+
+    private final AsciidocExecutor executor;
 
     public AsciidocBrowserApplication()
     {
@@ -258,7 +261,7 @@ public class AsciidocBrowserApplication extends JFrame
         sourceEditorPane.addHyperlinkListener( new HandleHyperlinkUpdate() );
         JScrollPane fileScrollPane = new JScrollPane( sourceEditorPane );
 
-        documentTabbedPane = new JTabbedPane( JTabbedPane.BOTTOM );
+        documentTabbedPane = new JTabbedPane( SwingConstants.BOTTOM );
         documentTabbedPane.addChangeListener( new ChangeListener()
         {
             @Override
@@ -279,19 +282,19 @@ public class AsciidocBrowserApplication extends JFrame
 
         previewScrollPane = new JScrollPane( xhtmlPanel );
         documentTabbedPane.addTab( "Preview", null, previewScrollPane, null );
+
+        executor = new AsciidocExecutor();
     }
 
     private void refreshPreview()
     {
         if ( currentFile != null && currentFile.exists() )
         {
-            System.out.println( currentFile );
-            AsciidocExecutor executor = new AsciidocExecutor();
-            executor.generate( currentFile.getAbsolutePath() );
-            System.out.println( executor.getTargetFile() );
+            File target = executor.generate( currentFile.getAbsolutePath() );
+            System.out.println( target );
             try
             {
-                xhtmlPanel.setDocument( executor.getTargetFile() );
+                xhtmlPanel.setDocument( target );
             }
             catch ( Exception e )
             {
