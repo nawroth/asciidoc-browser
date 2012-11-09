@@ -24,6 +24,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JDialog;
 import javax.swing.JEditorPane;
 import javax.swing.JLabel;
@@ -41,8 +42,7 @@ public class SettingsDialog extends JDialog
     private static final String OPTIONS_ICON = "/org/freedesktop/tango/16x16/categories/preferences-system.png";
     private final JPanel contentPanel = new JPanel();
     private JTextField homeLocationTextField;
-    private JEditorPane replacementsEditorPane;
-    private JTextField excludeAtStartTextField;
+    private JEditorPane configEditorPane;
     private JSpinner pathLengthSpinner;
 
     /**
@@ -60,7 +60,7 @@ public class SettingsDialog extends JDialog
         contentPanel.setBorder( new EmptyBorder( 5, 5, 5, 5 ) );
         getContentPane().add( contentPanel, "cell 0 0,grow" );
         contentPanel.setLayout( new MigLayout( "", "[106px,grow,fill]",
-                "[21px][][][][][][grow,fill]" ) );
+                "[21px][][][][][grow,fill]" ) );
         {
             JLabel lblHomeLocation = new JLabel( "Home Location:" );
             contentPanel.add( lblHomeLocation,
@@ -82,45 +82,33 @@ public class SettingsDialog extends JDialog
             homeLocationTextField.setColumns( 10 );
         }
         {
-            JLabel lblExcludeAtStart = new JLabel(
-                    "Exclude at start of location:" );
-            contentPanel.add( lblExcludeAtStart, "cell 0 2" );
-        }
-        {
-            excludeAtStartTextField = new JTextField();
-            excludeAtStartTextField.setTransferHandler( new TextFieldTransferHandler(
-                    excludeAtStartTextField.getTransferHandler(),
-                    new Runnable()
-                    {
-                        @Override
-                        public void run()
-                        {
-                            excludeAtStartTextField.setText( "" );
-                        }
-                    }, null ) );
-            contentPanel.add( excludeAtStartTextField, "flowx,cell 0 3" );
-            excludeAtStartTextField.setColumns( 10 );
+            JLabel lblJython = new JLabel( "jython" );
+            contentPanel.add( lblJython, "cell 0 2" );
         }
         {
             JLabel lblMaxFilepathLength = new JLabel(
                     "Max filepath length to show:" );
             contentPanel.add( lblMaxFilepathLength,
-                    "flowx,cell 0 4,alignx left" );
+                    "flowx,cell 0 3,alignx left" );
         }
         {
-            JLabel lblReplacements = new JLabel( "Include Path Substitutions" );
-            lblReplacements.setToolTipText( "Substitute inside include statements only." );
-            contentPanel.add( lblReplacements,
-                    "cell 0 5,alignx left,aligny center" );
+            JLabel lblConfigration = new JLabel( "AsciiDoc Configuration" );
+            contentPanel.add( lblConfigration,
+                    "cell 0 4,alignx left,aligny center" );
         }
         {
-            replacementsEditorPane = new JEditorPane();
-            contentPanel.add( replacementsEditorPane, "cell 0 6,grow" );
+            configEditorPane = new JEditorPane();
+            contentPanel.add( configEditorPane, "cell 0 5,grow" );
         }
         {
             pathLengthSpinner = new JSpinner();
             pathLengthSpinner.setValue( Settings.getMaxFilepathLength() );
-            contentPanel.add( pathLengthSpinner, "cell 0 4,alignx left" );
+            contentPanel.add( pathLengthSpinner, "cell 0 3,alignx left" );
+        }
+        {
+            JCheckBox jythonCheckbox = new JCheckBox(
+                    "Use Jython (experimental):" );
+            contentPanel.add( jythonCheckbox, "cell 0 3" );
         }
         {
             JPanel buttonPane = new JPanel();
@@ -162,8 +150,7 @@ public class SettingsDialog extends JDialog
     private void loadSettings()
     {
         homeLocationTextField.setText( Settings.getHome() );
-        replacementsEditorPane.setText( Settings.getReplacements() );
-        excludeAtStartTextField.setText( Settings.getExcludeStart() );
+        configEditorPane.setText( Settings.getConfiguration() );
         pathLengthSpinner.setValue( Settings.getMaxFilepathLength() );
     }
 
@@ -171,8 +158,7 @@ public class SettingsDialog extends JDialog
     {
         setVisible( false );
         Settings.setHome( homeLocationTextField.getText() );
-        Settings.setReplacements( replacementsEditorPane.getText() );
-        Settings.setExcludeStart( excludeAtStartTextField.getText() );
+        Settings.setConfiguration( configEditorPane.getText() );
         Settings.setMaxFilepathLength( (Integer) pathLengthSpinner.getValue() );
     }
 

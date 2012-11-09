@@ -24,9 +24,9 @@ import java.util.prefs.Preferences;
 public class Settings
 {
     private static final String HOME_LOCATION_KEY = "home";
-    private static final String REPLACEMENTS_KEY = "replacements";
-    private static final String EXCLUDE_START_KEY = "excludeStart";
+    private static final String ASCIIDOC_CONFIG_KEY = "asciidocConfig";
     private static final String MAX_FILEPATH_LENGTH_KEY = "maxFilepathLength";
+    private static final String USE_JYTHON_KEY = "jython";
     static final int MAX_FILEPATH_LENGTH = 50;
     private static final Preferences prefs = Preferences.userNodeForPackage( Settings.class );
 
@@ -40,25 +40,14 @@ public class Settings
         return prefs.get( HOME_LOCATION_KEY, "" );
     }
 
-    static void setReplacements( final String replacements )
+    static void setConfiguration( final String configuration )
     {
-        prefs.put( REPLACEMENTS_KEY, replacements );
+        prefs.put( ASCIIDOC_CONFIG_KEY, configuration );
     }
 
-    static String getReplacements()
+    static String getConfiguration()
     {
-        return prefs.get( REPLACEMENTS_KEY, "" );
-    }
-
-    static void setExcludeStart( final String start )
-    {
-        prefs.put( EXCLUDE_START_KEY, start );
-        FileWrapper.excludeStart = start;
-    }
-
-    static String getExcludeStart()
-    {
-        return prefs.get( EXCLUDE_START_KEY, "" );
+        return prefs.get( ASCIIDOC_CONFIG_KEY, "" );
     }
 
     static void setMaxFilepathLength( final int length )
@@ -71,5 +60,15 @@ public class Settings
     {
         return prefs.getInt( MAX_FILEPATH_LENGTH_KEY,
                 Settings.MAX_FILEPATH_LENGTH );
+    }
+
+    static boolean getJython()
+    {
+        return prefs.getBoolean( USE_JYTHON_KEY, false );
+    }
+
+    static void setJython( final boolean jythonEnabled )
+    {
+        prefs.putBoolean( USE_JYTHON_KEY, jythonEnabled );
     }
 }

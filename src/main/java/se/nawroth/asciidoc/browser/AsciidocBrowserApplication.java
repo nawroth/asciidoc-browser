@@ -502,7 +502,7 @@ public class AsciidocBrowserApplication extends JFrame
     private void refreshReplacements()
     {
         replacements.clear();
-        for ( String replacementLine : Settings.getReplacements()
+        for ( String replacementLine : Settings.getConfiguration()
                 .split( "\n" ) )
         {
             int commaPos = replacementLine.indexOf( ',' );

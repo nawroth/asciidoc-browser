@@ -24,7 +24,7 @@ import java.io.File;
 @SuppressWarnings( "serial" )
 public class FileWrapper extends File
 {
-    static String excludeStart = Settings.getExcludeStart();
+    static String excludeStart = "";
     static int maxStringLength = Settings.getMaxFilepathLength();
 
     public FileWrapper( final File parent, final String child )
