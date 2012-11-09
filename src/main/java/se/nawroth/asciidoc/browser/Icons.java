@@ -19,6 +19,12 @@
  */
 package se.nawroth.asciidoc.browser;
 
+import java.awt.Image;
+import java.awt.Toolkit;
+import java.net.URL;
+
+import javax.swing.ImageIcon;
+
 enum Icons
 {
     HOME( "go-home", "actions" ),
@@ -26,7 +32,8 @@ enum Icons
     OPTIONS( "preferences-system", "categories" ),
     BACK( "go-previous", "actions" ),
     APPLICATION( "x-office-document", "mimetypes" ),
-    PREVIEW( "internet-web-browser", "apps" );
+    PREVIEW( "internet-web-browser", "apps" ),
+    REFRESH( "view-refresh", "actions" );
 
     private static final String SIZE = "22x22";
     private static final String EXTENSION = "png";
@@ -40,8 +47,19 @@ enum Icons
                 + EXTENSION;
     }
 
-    String path()
+    private URL getResource()
     {
-        return path;
+        return Icons.class.getResource( path );
+    }
+
+    ImageIcon icon()
+    {
+        return new ImageIcon( getResource() );
+    }
+
+    Image image()
+    {
+        return Toolkit.getDefaultToolkit()
+                .getImage( getResource() );
     }
 }

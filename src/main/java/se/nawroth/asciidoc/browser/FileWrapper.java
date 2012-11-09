@@ -42,6 +42,15 @@ public class FileWrapper extends File
         super( pathname );
     }
 
+    static void setSmartExclude( final String path )
+    {
+        int separatorPos = path.lastIndexOf( File.separatorChar );
+        if ( separatorPos > 10 )
+        {
+            excludeStart = path.substring( 0, separatorPos + 1 );
+        }
+    }
+
     @Override
     public String toString()
     {
