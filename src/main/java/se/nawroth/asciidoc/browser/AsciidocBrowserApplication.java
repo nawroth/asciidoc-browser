@@ -30,6 +30,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -37,6 +38,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Properties;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -123,7 +125,8 @@ public class AsciidocBrowserApplication extends JFrame
             }
         } );
 
-        executor = new AsciidocExecutor( args[0] );
+        executor = new AsciidocExecutor( args.length > 0 ? args[0]
+                : "target/tools/bin/asciidoc" );
 
         JPanel buttonPanel = new JPanel();
         backButton = new JButton( "" );
@@ -502,15 +505,28 @@ public class AsciidocBrowserApplication extends JFrame
 
     private void refreshReplacements()
     {
-        replacements.clear();
-        for ( String replacementLine : Settings.getConfiguration()
-                .split( "\n" ) )
+        Properties properties = new Properties();
+        try
         {
-            int commaPos = replacementLine.indexOf( ',' );
-            if ( commaPos > 0 )
+            properties.load( new StringReader( Settings.getConfiguration() ) );
+        }
+        catch ( IOException e )
+        {
+            e.printStackTrace();
+        }
+        replacements.clear();
+        for ( Entry<Object, Object> entry : properties.entrySet() )
+        {
+            if ( entry.getKey() instanceof String
+                 && entry.getValue() instanceof String )
             {
-                replacements.put( replacementLine.substring( 0, commaPos ),
-                        replacementLine.substring( commaPos + 1 ) );
+                String key = (String) entry.getKey();
+                String value = (String) entry.getValue();
+                if ( !key.startsWith( "[" ) && !value.trim()
+                        .isEmpty() )
+                {
+                    replacements.put( "{" + key + "}", value );
+                }
             }
         }
     }
