@@ -44,6 +44,7 @@ public class SettingsDialog extends JDialog
     private JTextField homeLocationTextField;
     private JEditorPane configEditorPane;
     private JSpinner pathLengthSpinner;
+    private JCheckBox jythonCheckbox;
 
     /**
      * Create the dialog.
@@ -52,8 +53,7 @@ public class SettingsDialog extends JDialog
     {
         setDefaultCloseOperation( WindowConstants.DO_NOTHING_ON_CLOSE );
         setIconImage( Toolkit.getDefaultToolkit()
-                .getImage(
-                        SettingsDialog.class.getResource( OPTIONS_ICON ) ) );
+                .getImage( SettingsDialog.class.getResource( OPTIONS_ICON ) ) );
         setBounds( 100, 100, 698, 416 );
         getContentPane().setLayout(
                 new MigLayout( "", "[698px]", "[236px,grow][35px]" ) );
@@ -82,8 +82,8 @@ public class SettingsDialog extends JDialog
             homeLocationTextField.setColumns( 10 );
         }
         {
-            JLabel lblJython = new JLabel( "jython" );
-            contentPanel.add( lblJython, "cell 0 2" );
+            jythonCheckbox = new JCheckBox( "Use Jython (experimental)" );
+            contentPanel.add( jythonCheckbox, "cell 0 2" );
         }
         {
             JLabel lblMaxFilepathLength = new JLabel(
@@ -104,11 +104,6 @@ public class SettingsDialog extends JDialog
             pathLengthSpinner = new JSpinner();
             pathLengthSpinner.setValue( Settings.getMaxFilepathLength() );
             contentPanel.add( pathLengthSpinner, "cell 0 3,alignx left" );
-        }
-        {
-            JCheckBox jythonCheckbox = new JCheckBox(
-                    "Use Jython (experimental):" );
-            contentPanel.add( jythonCheckbox, "cell 0 3" );
         }
         {
             JPanel buttonPane = new JPanel();
@@ -149,9 +144,9 @@ public class SettingsDialog extends JDialog
 
     private void loadSettings()
     {
-        homeLocationTextField.setText( Settings.getHome() );
         configEditorPane.setText( Settings.getConfiguration() );
         pathLengthSpinner.setValue( Settings.getMaxFilepathLength() );
+        jythonCheckbox.setSelected( Settings.getJython() );
     }
 
     private void actionOk()
@@ -160,6 +155,7 @@ public class SettingsDialog extends JDialog
         Settings.setHome( homeLocationTextField.getText() );
         Settings.setConfiguration( configEditorPane.getText() );
         Settings.setMaxFilepathLength( (Integer) pathLengthSpinner.getValue() );
+        Settings.setJython( jythonCheckbox.isSelected() );
     }
 
     private void actionCancel()

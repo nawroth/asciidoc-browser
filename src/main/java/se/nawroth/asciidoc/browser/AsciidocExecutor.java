@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.io.FileUtils;
 import org.python.core.PyList;
 import org.python.core.PyString;
 import org.python.core.PySystemState;
@@ -36,31 +37,19 @@ public class AsciidocExecutor
     private static File asciidoc;
     private static final PySystemState pySys = new PySystemState();
     private static final PyList argv = pySys.argv;
-    private static final List<String> arguments = new ArrayList<String>()
+    private static final List<String> DEFAULT_ARGUMENTS = new ArrayList<String>()
     {
         {
             add( "--backend" );
             add( "xhtml11" );
-            add( "--out-file" );
         }
     };
 
     private static PythonInterpreter python;
 
-    private File targetFile;
-
     AsciidocExecutor( final String asciidocDir )
     {
         asciidoc = new File( new File( asciidocDir ), "asciidoc.py" );
-        try
-        {
-            targetFile = File.createTempFile( "asciidoc-browser.", ".xhtml" );
-            System.out.println( targetFile.getAbsolutePath() );
-        }
-        catch ( IOException ioe )
-        {
-            ioe.printStackTrace();
-        }
         python = new PythonInterpreter( null, pySys );
     }
 
@@ -68,14 +57,14 @@ public class AsciidocExecutor
     {
         try
         {
-            Document document = Document.getDocument( documentPath );
-            return document.render();
+            return Document.getDocument( documentPath )
+                    .render();
         }
         catch ( IOException e1 )
         {
             e1.printStackTrace();
         }
-        return targetFile;
+        return null;
     }
 
     private static class Document
@@ -84,6 +73,7 @@ public class AsciidocExecutor
         private final String documentPath;
         private final File targetFile;
         private Long lastModified = null;
+        private String asciidocConfig = null;
 
         private Document( final String documentPath ) throws IOException
         {
@@ -95,29 +85,63 @@ public class AsciidocExecutor
         private File render()
         {
             long documentTimestamp = new File( documentPath ).lastModified();
-            if ( targetFile.length() > 0 && lastModified == documentTimestamp )
+            String configuration = Settings.getConfiguration();
+            if ( targetFile.length() > 0
+                 && lastModified.longValue() == documentTimestamp
+                 && configuration == asciidocConfig )
             {
                 return targetFile;
             }
             lastModified = documentTimestamp;
-            if ( true )
+            asciidocConfig = configuration;
+            File configFile = null;
+            try
             {
-                renderUsingNativePython();
+                if ( configuration != null && !configuration.isEmpty() )
+                {
+                    try
+                    {
+                        configFile = File.createTempFile( "asciidoc", ".conf" );
+                        FileUtils.write( configFile, configuration, "UTF-8" );
+                    }
+                    catch ( IOException e )
+                    {
+                        e.printStackTrace();
+                    }
+                }
+                List<String> command = new ArrayList<String>( DEFAULT_ARGUMENTS );
+                if ( configFile != null )
+                {
+                    command.add( "--conf-file" );
+                    command.add( configFile.getAbsolutePath() );
+                }
+                command.add( "--out-file" );
+                command.add( targetFile.getAbsolutePath() );
+                command.add( documentPath );
+                if ( Settings.getJython() )
+                {
+                    renderUsingJython( command );
+                }
+                else
+                {
+                    renderUsingNativePython( command );
+                }
             }
-            else
+            finally
             {
-                renderUsingJython();
+                if ( configFile != null && configFile.exists() )
+                {
+                    configFile.delete();
+                }
             }
             return targetFile;
         }
 
-        private void renderUsingNativePython()
+        private void renderUsingNativePython( final List<String> arguments )
         {
             List<String> command = new ArrayList<String>();
             command.add( asciidoc.getAbsolutePath() );
             command.addAll( arguments );
-            command.add( targetFile.getAbsolutePath() );
-            command.add( documentPath );
             ProcessBuilder processBuilder = new ProcessBuilder( command );
             try
             {
@@ -134,16 +158,14 @@ public class AsciidocExecutor
             }
         }
 
-        private void renderUsingJython()
+        private void renderUsingJython( final List<String> arguments )
         {
             argv.clear();
             argv.append( new PyString( "" ) );
-            for (String argument : arguments)
+            for ( String argument : arguments )
             {
-                argv.append( new PyString( argument) );
+                argv.append( new PyString( argument ) );
             }
-            argv.append( new PyString( targetFile.getAbsolutePath() ) );
-            argv.append( new PyString( documentPath ) );
             python.set( "__file__", asciidoc.getAbsolutePath() );
             python.execfile( asciidoc.getAbsolutePath() );
         }
@@ -155,6 +177,7 @@ public class AsciidocExecutor
             if ( document == null )
             {
                 document = new Document( documentPath );
+                documents.put( documentPath, document );
             }
             return document;
         }
