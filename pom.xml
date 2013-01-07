@@ -50,9 +50,9 @@
       <version>9.0.1</version>
     </dependency>
     <dependency>
-      <groupId>net.sf.jtidy</groupId>
-      <artifactId>jtidy</artifactId>
-      <version>r938</version>
+      <groupId>org.beanshell</groupId>
+      <artifactId>bsh</artifactId>
+      <version>2.0b5</version>
     </dependency>
     <dependency>
       <groupId>com.github.insubstantial</groupId>
@@ -121,7 +121,8 @@
     </plugins>
     <pluginManagement>
       <plugins>
-        <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+        <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence 
+          on the Maven build itself. -->
         <plugin>
           <groupId>org.eclipse.m2e</groupId>
           <artifactId>lifecycle-mapping</artifactId>

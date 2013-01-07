@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2002-2012 "Neo Technology,"
+ * Copyright (c) 2002-2013 "Neo Technology,"
  * Network Engine for Objects in Lund AB [http://neotechnology.com]
  *
  * This file is part of Neo4j.
@@ -71,6 +71,8 @@ import org.apache.commons.io.LineIterator;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.xhtmlrenderer.simple.XHTMLPanel;
 
+import bsh.util.JConsole;
+
 @SuppressWarnings( "serial" )
 public class AsciidocBrowserApplication extends JFrame
 {
@@ -93,7 +95,7 @@ public class AsciidocBrowserApplication extends JFrame
     private File currentFile;
     private final JScrollPane treeScrollPane;
     private final JTree documentTree;
-    private final JSplitPane splitPane;
+    private final JSplitPane treeSourceSplitPane;
 
     private final Map<CharSequence, CharSequence> replacements = new HashMap<CharSequence, CharSequence>();
 
@@ -108,6 +110,9 @@ public class AsciidocBrowserApplication extends JFrame
     private final XHTMLPanel xhtmlPanel;
 
     private final AsciidocExecutor executor;
+    private final JSplitPane sourceLogSplitPane;
+
+    private final JConsole console;
 
     public AsciidocBrowserApplication( final String[] args )
     {
@@ -234,22 +239,22 @@ public class AsciidocBrowserApplication extends JFrame
         buttonPanel.add( homebutton, "cell 2 0" );
         buttonPanel.add( locationTextField, "cell 3 0,grow" );
 
-        splitPane = new JSplitPane();
-        splitPane.setResizeWeight( 0.3 );
-        getContentPane().add( splitPane, "cell 0 1,grow" );
+        treeSourceSplitPane = new JSplitPane();
+        treeSourceSplitPane.setResizeWeight( 0.3 );
+        getContentPane().add( treeSourceSplitPane, "cell 0 1,grow" );
 
         treeScrollPane = new JScrollPane();
         treeScrollPane.setMinimumSize( new Dimension( 200, 200 ) );
-        splitPane.setLeftComponent( treeScrollPane );
+        treeSourceSplitPane.setLeftComponent( treeScrollPane );
 
         documentTree = new DocumentTree( documentModel );
         documentTree.setCellRenderer( new TooltipsTreeCellRenderer() );
         ToolTipManager.sharedInstance()
-                .registerComponent( documentTree );
+        .registerComponent( documentTree );
         ToolTipManager.sharedInstance()
-                .setInitialDelay( INITIAL_TOOLTIP_DELAY );
+        .setInitialDelay( INITIAL_TOOLTIP_DELAY );
         ToolTipManager.sharedInstance()
-                .setReshowDelay( 0 );
+        .setReshowDelay( 0 );
         documentTree.addTreeSelectionListener( new TreeSelectionListener()
         {
             @Override
@@ -257,7 +262,7 @@ public class AsciidocBrowserApplication extends JFrame
             {
                 TreePath newLeadSelectionPath = tse.getNewLeadSelectionPath();
                 if ( newLeadSelectionPath != null
-                     && !newLeadSelectionPath.equals( currentSelectionPath ) )
+                        && !newLeadSelectionPath.equals( currentSelectionPath ) )
                 {
                     DefaultMutableTreeNode node = (DefaultMutableTreeNode) newLeadSelectionPath.getLastPathComponent();
                     FileWrapper file = (FileWrapper) node.getUserObject();
@@ -273,6 +278,7 @@ public class AsciidocBrowserApplication extends JFrame
         sourceEditorPane.setEditable( false );
         sourceEditorPane.addHyperlinkListener( new HandleHyperlinkUpdate() );
         JScrollPane fileScrollPane = new JScrollPane( sourceEditorPane );
+        fileScrollPane.setMinimumSize( new Dimension( 600, 600 ) );
 
         documentTabbedPane = new JTabbedPane( SwingConstants.BOTTOM );
         documentTabbedPane.addChangeListener( new ChangeListener()
@@ -283,7 +289,10 @@ public class AsciidocBrowserApplication extends JFrame
                 refreshPreview();
             }
         } );
-        splitPane.setRightComponent( documentTabbedPane );
+        sourceLogSplitPane = new JSplitPane();
+        sourceLogSplitPane.setOrientation( JSplitPane.VERTICAL_SPLIT );
+        treeSourceSplitPane.setRightComponent( sourceLogSplitPane );
+        sourceLogSplitPane.setTopComponent( documentTabbedPane );
         documentTabbedPane.add( fileScrollPane );
         documentTabbedPane.setTitleAt( 0, "Source" );
 
@@ -291,6 +300,9 @@ public class AsciidocBrowserApplication extends JFrame
 
         previewScrollPane = new JScrollPane( xhtmlPanel );
         documentTabbedPane.addTab( "Preview", null, previewScrollPane, null );
+
+        console = new JConsole();
+        sourceLogSplitPane.setBottomComponent( console );
     }
 
     private void refreshPreview()
@@ -351,7 +363,7 @@ public class AsciidocBrowserApplication extends JFrame
         String location = locationTextField.getText()
                 .trim();
         if ( location.startsWith( FILE_URI_SCHEMA )
-             && location.length() > FILE_URI_SCHEMA.length() )
+                && location.length() > FILE_URI_SCHEMA.length() )
         {
             location = location.substring( FILE_URI_SCHEMA.length() );
             locationTextField.setText( location );
@@ -383,8 +395,8 @@ public class AsciidocBrowserApplication extends JFrame
         {
             StringBuilder sb = new StringBuilder( 10 * 1024 );
             sb.append( "<html><head><title>"
-                       + file.getName()
-                       + "</title><style>body {font-size: 1em;}pre {margin: 0;}</style></head><body>" );
+                    + file.getName()
+                    + "</title><style>body {font-size: 1em;}pre {margin: 0;}</style></head><body>" );
             String parent = file.getParent();
             LineIterator lines = FileUtils.lineIterator( file, "UTF-8" );
             while ( lines.hasNext() )
@@ -396,10 +408,10 @@ public class AsciidocBrowserApplication extends JFrame
                     String href = getFileLocation( parent, line );
 
                     sb.append( "<a href=\"" )
-                            .append( href )
-                            .append( "\">" )
-                            .append( line )
-                            .append( "</a>" );
+                    .append( href )
+                    .append( "\">" )
+                    .append( line )
+                    .append( "</a>" );
                 }
                 else
                 {
@@ -471,7 +483,7 @@ public class AsciidocBrowserApplication extends JFrame
 
     private Collection<FileWrapper> getChildren(
             final se.nawroth.asciidoc.browser.FileWrapper parent )
-    {
+            {
         List<FileWrapper> children = new ArrayList<FileWrapper>();
         String directory = parent.getParent();
         LineIterator lines;
@@ -501,7 +513,7 @@ public class AsciidocBrowserApplication extends JFrame
             e.printStackTrace();
         }
         return children;
-    }
+            }
 
     private void refreshReplacements()
     {
@@ -518,7 +530,7 @@ public class AsciidocBrowserApplication extends JFrame
         for ( Entry<Object, Object> entry : properties.entrySet() )
         {
             if ( entry.getKey() instanceof String
-                 && entry.getValue() instanceof String )
+                    && entry.getValue() instanceof String )
             {
                 String key = (String) entry.getKey();
                 String value = (String) entry.getValue();
