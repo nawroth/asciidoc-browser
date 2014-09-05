@@ -1,21 +1,20 @@
 /**
- * Copyright (c) 2002-2013 "Neo Technology,"
- * Network Engine for Objects in Lund AB [http://neotechnology.com]
+ * Licensed to Neo Technology under one or more contributor
+ * license agreements. See the NOTICE file distributed with
+ * this work for additional information regarding copyright
+ * ownership. Neo Technology licenses this file to you under
+ * the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * This file is part of Neo4j.
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Neo4j is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package se.nawroth.asciidoc.browser;
 
@@ -52,19 +51,15 @@ public class SettingsDialog extends JDialog
     public SettingsDialog()
     {
         setDefaultCloseOperation( WindowConstants.DO_NOTHING_ON_CLOSE );
-        setIconImage( Toolkit.getDefaultToolkit()
-                .getImage( SettingsDialog.class.getResource( OPTIONS_ICON ) ) );
+        setIconImage( Toolkit.getDefaultToolkit().getImage( SettingsDialog.class.getResource( OPTIONS_ICON ) ) );
         setBounds( 100, 100, 698, 416 );
-        getContentPane().setLayout(
-                new MigLayout( "", "[698px]", "[236px,grow][35px]" ) );
+        getContentPane().setLayout( new MigLayout( "", "[698px]", "[236px,grow][35px]" ) );
         contentPanel.setBorder( new EmptyBorder( 5, 5, 5, 5 ) );
         getContentPane().add( contentPanel, "cell 0 0,grow" );
-        contentPanel.setLayout( new MigLayout( "", "[106px,grow,fill]",
-                "[21px][][][][][grow,fill]" ) );
+        contentPanel.setLayout( new MigLayout( "", "[106px,grow,fill]", "[21px][][][][][grow,fill]" ) );
         {
             JLabel lblHomeLocation = new JLabel( "Home Location:" );
-            contentPanel.add( lblHomeLocation,
-                    "cell 0 0,alignx left,aligny center" );
+            contentPanel.add( lblHomeLocation, "cell 0 0,alignx left,aligny center" );
         }
         {
             homeLocationTextField = new JTextField();
@@ -77,8 +72,7 @@ public class SettingsDialog extends JDialog
                             homeLocationTextField.setText( "" );
                         }
                     }, null ) );
-            contentPanel.add( homeLocationTextField,
-                    "cell 0 1,alignx left,aligny center" );
+            contentPanel.add( homeLocationTextField, "cell 0 1,alignx left,aligny center" );
             homeLocationTextField.setColumns( 10 );
         }
         {
@@ -86,15 +80,12 @@ public class SettingsDialog extends JDialog
             contentPanel.add( jythonCheckbox, "cell 0 2" );
         }
         {
-            JLabel lblMaxFilepathLength = new JLabel(
-                    "Max filepath length to show:" );
-            contentPanel.add( lblMaxFilepathLength,
-                    "flowx,cell 0 3,alignx left" );
+            JLabel lblMaxFilepathLength = new JLabel( "Max filepath length to show:" );
+            contentPanel.add( lblMaxFilepathLength, "flowx,cell 0 3,alignx left" );
         }
         {
             JLabel lblConfigration = new JLabel( "AsciiDoc Configuration" );
-            contentPanel.add( lblConfigration,
-                    "cell 0 4,alignx left,aligny center" );
+            contentPanel.add( lblConfigration, "cell 0 4,alignx left,aligny center" );
         }
         {
             configEditorPane = new JEditorPane();
@@ -107,8 +98,7 @@ public class SettingsDialog extends JDialog
         }
         {
             JPanel buttonPane = new JPanel();
-            getContentPane().add( buttonPane,
-                    "cell 0 1,alignx right,aligny bottom" );
+            getContentPane().add( buttonPane, "cell 0 1,alignx right,aligny bottom" );
             {
                 JButton okButton = new JButton( "OK" );
                 okButton.addActionListener( new ActionListener()
@@ -119,8 +109,7 @@ public class SettingsDialog extends JDialog
                         actionOk();
                     }
                 } );
-                buttonPane.setLayout( new MigLayout( "", "[54px][81px]",
-                        "[25px]" ) );
+                buttonPane.setLayout( new MigLayout( "", "[54px][81px]", "[25px]" ) );
                 okButton.setActionCommand( "OK" );
                 buttonPane.add( okButton, "cell 0 0,alignx right,aligny top" );
                 getRootPane().setDefaultButton( okButton );
@@ -146,7 +135,6 @@ public class SettingsDialog extends JDialog
     {
         configEditorPane.setText( Settings.getConfiguration() );
         pathLengthSpinner.setValue( Settings.getMaxFilepathLength() );
-        jythonCheckbox.setSelected( Settings.getJython() );
     }
 
     private void actionOk()
@@ -155,7 +143,6 @@ public class SettingsDialog extends JDialog
         Settings.setHome( homeLocationTextField.getText() );
         Settings.setConfiguration( configEditorPane.getText() );
         Settings.setMaxFilepathLength( (Integer) pathLengthSpinner.getValue() );
-        Settings.setJython( jythonCheckbox.isSelected() );
     }
 
     private void actionCancel()

@@ -4,27 +4,38 @@
   <parent>
     <groupId>org.neo4j.build</groupId>
     <artifactId>parent-central</artifactId>
-    <version>35</version>
+    <version>40</version>
   </parent>
   <groupId>se.nawroth</groupId>
   <artifactId>asciidoc-browser</artifactId>
   <version>0.1-SNAPSHOT</version>
+
+  <properties>
+    <license-text.header>ApacheLicense-2.0-header.txt</license-text.header>
+  </properties>
+
+  <licenses>
+    <license>
+      <name>Apache License Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <comments>
+        Note that this license is for the project itself,
+        and not for its dependencies. See the included NOTICE.txt
+        file for further details.
+        </comments>
+    </license>
+  </licenses>
+
   <dependencyManagement>
     <dependencies>
       <dependency>
         <groupId>commons-io</groupId>
         <artifactId>commons-io</artifactId>
-        <version>2.3</version>
+        <version>2.4</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
   <dependencies>
-    <dependency>
-      <groupId>org.neo4j.build.plugins</groupId>
-      <artifactId>neo4j-doctools</artifactId>
-      <version>1</version>
-      <scope>provided</scope>
-    </dependency>
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
@@ -32,7 +43,7 @@
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
-      <version>3.1</version>
+      <version>3.3.2</version>
     </dependency>
     <dependency>
       <groupId>org.freedesktop.tango</groupId>
@@ -45,9 +56,9 @@
       <version>4.2</version>
     </dependency>
     <dependency>
-      <groupId>org.xhtmlrenderer</groupId>
-      <artifactId>flying-saucer-core</artifactId>
-      <version>9.0.1</version>
+      <groupId>net.sf.cssbox</groupId>
+      <artifactId>swingbox</artifactId>
+      <version>1.1</version>
     </dependency>
     <dependency>
       <groupId>org.beanshell</groupId>
@@ -60,9 +71,9 @@
       <version>7.1</version>
     </dependency>
     <dependency>
-      <groupId>org.python</groupId>
-      <artifactId>jython-standalone</artifactId>
-      <version>2.5.3</version>
+      <groupId>org.asciidoctor</groupId>
+      <artifactId>asciidoctorj</artifactId>
+      <version>1.5.0</version>
     </dependency>
     <!-- <dependency> <groupId>net.sf.jedit-syntax</groupId> <artifactId>jedit-syntax</artifactId> <version>2.2.2</version> 
       </dependency> -->

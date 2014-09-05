@@ -1,21 +1,20 @@
 /**
- * Copyright (c) 2002-2013 "Neo Technology,"
- * Network Engine for Objects in Lund AB [http://neotechnology.com]
+ * Licensed to Neo Technology under one or more contributor
+ * license agreements. See the NOTICE file distributed with
+ * this work for additional information regarding copyright
+ * ownership. Neo Technology licenses this file to you under
+ * the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * This file is part of Neo4j.
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Neo4j is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package se.nawroth.asciidoc.browser;
 
@@ -69,7 +68,7 @@ import net.miginfocom.swing.MigLayout;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.commons.lang3.StringEscapeUtils;
-import org.xhtmlrenderer.simple.XHTMLPanel;
+import org.fit.cssbox.swingbox.BrowserPane;
 
 import bsh.util.JConsole;
 
@@ -107,7 +106,7 @@ public class AsciidocBrowserApplication extends JFrame
     private final JTabbedPane documentTabbedPane;
     private final JScrollPane previewScrollPane;
 
-    private final XHTMLPanel xhtmlPanel;
+    private final BrowserPane browserPane;
 
     private final AsciidocExecutor executor;
     private final JSplitPane sourceLogSplitPane;
@@ -119,7 +118,7 @@ public class AsciidocBrowserApplication extends JFrame
         super( "Asciidoc Browser" );
         setIconImage( Icons.APPLICATION.image() );
 
-        setSize( 1024, 800 );
+        setSize( 1200, 1024 );
 
         addWindowListener( new WindowAdapter()
         {
@@ -130,8 +129,7 @@ public class AsciidocBrowserApplication extends JFrame
             }
         } );
 
-        executor = new AsciidocExecutor( args.length > 0 ? args[0]
-                : "target/tools/bin/asciidoc" );
+        executor = new AsciidocExecutor();
 
         JPanel buttonPanel = new JPanel();
         backButton = new JButton( "" );
@@ -171,8 +169,7 @@ public class AsciidocBrowserApplication extends JFrame
         } );
         forwardButton.setEnabled( false );
         buttonPanel.add( forwardButton, "cell 0 0,grow" );
-        getContentPane().setLayout(
-                new MigLayout( "", "[793.00px,grow]", "[44px][930px]" ) );
+        getContentPane().setLayout( new MigLayout( "", "[793.00px,grow]", "[44px][930px]" ) );
         getContentPane().add( buttonPanel, "cell 0 0,growx,aligny top" );
         locationTextField = new JTextField( 65 );
         locationTextField.setText( "" );
@@ -189,8 +186,8 @@ public class AsciidocBrowserApplication extends JFrame
                 }
             }
         } );
-        locationTextField.setTransferHandler( new TextFieldTransferHandler(
-                locationTextField.getTransferHandler(), new Runnable()
+        locationTextField.setTransferHandler( new TextFieldTransferHandler( locationTextField.getTransferHandler(),
+                new Runnable()
                 {
                     @Override
                     public void run()
@@ -249,20 +246,16 @@ public class AsciidocBrowserApplication extends JFrame
 
         documentTree = new DocumentTree( documentModel );
         documentTree.setCellRenderer( new TooltipsTreeCellRenderer() );
-        ToolTipManager.sharedInstance()
-        .registerComponent( documentTree );
-        ToolTipManager.sharedInstance()
-        .setInitialDelay( INITIAL_TOOLTIP_DELAY );
-        ToolTipManager.sharedInstance()
-        .setReshowDelay( 0 );
+        ToolTipManager.sharedInstance().registerComponent( documentTree );
+        ToolTipManager.sharedInstance().setInitialDelay( INITIAL_TOOLTIP_DELAY );
+        ToolTipManager.sharedInstance().setReshowDelay( 0 );
         documentTree.addTreeSelectionListener( new TreeSelectionListener()
         {
             @Override
             public void valueChanged( final TreeSelectionEvent tse )
             {
                 TreePath newLeadSelectionPath = tse.getNewLeadSelectionPath();
-                if ( newLeadSelectionPath != null
-                        && !newLeadSelectionPath.equals( currentSelectionPath ) )
+                if ( newLeadSelectionPath != null && !newLeadSelectionPath.equals( currentSelectionPath ) )
                 {
                     DefaultMutableTreeNode node = (DefaultMutableTreeNode) newLeadSelectionPath.getLastPathComponent();
                     FileWrapper file = (FileWrapper) node.getUserObject();
@@ -296,12 +289,14 @@ public class AsciidocBrowserApplication extends JFrame
         documentTabbedPane.add( fileScrollPane );
         documentTabbedPane.setTitleAt( 0, "Source" );
 
-        xhtmlPanel = new XHTMLPanel();
+        browserPane = new BrowserPane();
 
-        previewScrollPane = new JScrollPane( xhtmlPanel );
+        previewScrollPane = new JScrollPane( browserPane );
         documentTabbedPane.addTab( "Preview", null, previewScrollPane, null );
 
         console = new JConsole();
+        System.setErr( console.getErr() );
+        System.err.println( "trying the console" );
         sourceLogSplitPane.setBottomComponent( console );
     }
 
@@ -314,11 +309,12 @@ public class AsciidocBrowserApplication extends JFrame
         }
         if ( currentFile != null && currentFile.exists() )
         {
-            File target = executor.generate( currentFile.getAbsolutePath() );
-            System.out.println( target );
+            console.println( "Parsing AsciiDoc from '" + currentFile.getName() + "'." );
+            File targetFile = executor.generate( currentFile );
             try
             {
-                xhtmlPanel.setDocument( target );
+                console.println( "Loading the output from '" + currentFile.getName() + "' into the preview browser." );
+                browserPane.setPage( targetFile.toURI().toURL() );
             }
             catch ( Exception e )
             {
@@ -360,10 +356,8 @@ public class AsciidocBrowserApplication extends JFrame
 
     private void actionGo()
     {
-        String location = locationTextField.getText()
-                .trim();
-        if ( location.startsWith( FILE_URI_SCHEMA )
-                && location.length() > FILE_URI_SCHEMA.length() )
+        String location = locationTextField.getText().trim();
+        if ( location.startsWith( FILE_URI_SCHEMA ) && location.length() > FILE_URI_SCHEMA.length() )
         {
             location = location.substring( FILE_URI_SCHEMA.length() );
             locationTextField.setText( location );
@@ -394,9 +388,8 @@ public class AsciidocBrowserApplication extends JFrame
         try
         {
             StringBuilder sb = new StringBuilder( 10 * 1024 );
-            sb.append( "<html><head><title>"
-                    + file.getName()
-                    + "</title><style>body {font-size: 1em;}pre {margin: 0;}</style></head><body>" );
+            sb.append( "<html><head><title>" + file.getName()
+                       + "</title><style>body {font-size: 1em;}pre {margin: 0;}</style></head><body>" );
             String parent = file.getParent();
             LineIterator lines = FileUtils.lineIterator( file, "UTF-8" );
             while ( lines.hasNext() )
@@ -407,11 +400,7 @@ public class AsciidocBrowserApplication extends JFrame
                 {
                     String href = getFileLocation( parent, line );
 
-                    sb.append( "<a href=\"" )
-                    .append( href )
-                    .append( "\">" )
-                    .append( line )
-                    .append( "</a>" );
+                    sb.append( "<a href=\"" ).append( href ).append( "\">" ).append( line ).append( "</a>" );
                 }
                 else
                 {
@@ -466,8 +455,7 @@ public class AsciidocBrowserApplication extends JFrame
         documentModel.setRoot( rootNode );
     }
 
-    private void addFileWrapperChildren(
-            final DefaultMutableTreeNode parentNode, final Object... parentPath )
+    private void addFileWrapperChildren( final DefaultMutableTreeNode parentNode, final Object... parentPath )
     {
         FileWrapper parent = (FileWrapper) parentNode.getUserObject();
         for ( FileWrapper child : getChildren( parent ) )
@@ -481,9 +469,8 @@ public class AsciidocBrowserApplication extends JFrame
         }
     }
 
-    private Collection<FileWrapper> getChildren(
-            final se.nawroth.asciidoc.browser.FileWrapper parent )
-            {
+    private Collection<FileWrapper> getChildren( final se.nawroth.asciidoc.browser.FileWrapper parent )
+    {
         List<FileWrapper> children = new ArrayList<FileWrapper>();
         String directory = parent.getParent();
         LineIterator lines;
@@ -503,7 +490,7 @@ public class AsciidocBrowserApplication extends JFrame
                     }
                     else
                     {
-                        System.out.println( href );
+                        // System.out.println( href );
                     }
                 }
             }
@@ -513,7 +500,7 @@ public class AsciidocBrowserApplication extends JFrame
             e.printStackTrace();
         }
         return children;
-            }
+    }
 
     private void refreshReplacements()
     {
@@ -529,13 +516,11 @@ public class AsciidocBrowserApplication extends JFrame
         replacements.clear();
         for ( Entry<Object, Object> entry : properties.entrySet() )
         {
-            if ( entry.getKey() instanceof String
-                    && entry.getValue() instanceof String )
+            if ( entry.getKey() instanceof String && entry.getValue() instanceof String )
             {
                 String key = (String) entry.getKey();
                 String value = (String) entry.getValue();
-                if ( !key.startsWith( "[" ) && !value.trim()
-                        .isEmpty() )
+                if ( !key.startsWith( "[" ) && !value.trim().isEmpty() )
                 {
                     replacements.put( "{" + key + "}", value );
                 }
@@ -550,8 +535,7 @@ public class AsciidocBrowserApplication extends JFrame
         String hrefWithReplacements = href;
         for ( Entry<CharSequence, CharSequence> entry : replacements.entrySet() )
         {
-            hrefWithReplacements = hrefWithReplacements.replace(
-                    entry.getKey(), entry.getValue() );
+            hrefWithReplacements = hrefWithReplacements.replace( entry.getKey(), entry.getValue() );
         }
         if ( hrefWithReplacements.equals( href ) )
         {
@@ -566,8 +550,7 @@ public class AsciidocBrowserApplication extends JFrame
 
     private void showError( final String errorMessage )
     {
-        JOptionPane.showMessageDialog( this, errorMessage, "Error",
-                JOptionPane.ERROR_MESSAGE );
+        JOptionPane.showMessageDialog( this, errorMessage, "Error", JOptionPane.ERROR_MESSAGE );
     }
 
     private void updateButtons()
@@ -612,8 +595,7 @@ public class AsciidocBrowserApplication extends JFrame
                     JDialog.setDefaultLookAndFeelDecorated( true );
                     System.setProperty( "sun.awt.noerasebackground", "true" );
                     UIManager.setLookAndFeel( new AsciidocBrowserSubstanceSkin() );
-                    AsciidocBrowserApplication browser = new AsciidocBrowserApplication(
-                            args );
+                    AsciidocBrowserApplication browser = new AsciidocBrowserApplication( args );
                     browser.setVisible( true );
                     settingsDialog = new SettingsDialog();
                 }
