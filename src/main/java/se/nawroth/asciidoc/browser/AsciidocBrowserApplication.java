@@ -129,8 +129,6 @@ public class AsciidocBrowserApplication extends JFrame
             }
         } );
 
-        executor = new AsciidocExecutor();
-
         JPanel buttonPanel = new JPanel();
         backButton = new JButton( "" );
         backButton.setIcon( Icons.BACK.icon() );
@@ -296,8 +294,10 @@ public class AsciidocBrowserApplication extends JFrame
 
         console = new JConsole();
         System.setErr( console.getErr() );
-        System.err.println( "trying the console" );
+        System.setOut( console.getOut() );
         sourceLogSplitPane.setBottomComponent( console );
+
+        executor = new AsciidocExecutor();
     }
 
     private void refreshPreview()

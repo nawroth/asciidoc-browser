@@ -82,39 +82,9 @@
   <build>
     <plugins>
       <plugin>
-        <artifactId>maven-dependency-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>unpack-doctools</id>
-            <phase>generate-sources</phase>
-            <goals>
-              <goal>unpack-dependencies</goal>
-            </goals>
-            <configuration>
-              <type>jar</type>
-              <includeArtifactIds>neo4j-doctools</includeArtifactIds>
-              <outputDirectory>target/tools</outputDirectory>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>exec-maven-plugin</artifactId>
         <executions>
-          <execution>
-            <id>initialize-tools</id>
-            <phase>compile</phase>
-            <goals>
-              <goal>exec</goal>
-            </goals>
-            <configuration>
-              <executable>make</executable>
-              <arguments>
-                <argument>init</argument>
-              </arguments>
-            </configuration>
-          </execution>
           <execution>
             <id>default-cli</id>
             <goals>
@@ -124,9 +94,6 @@
         </executions>
         <configuration>
           <mainClass>se.nawroth.asciidoc.browser.AsciidocBrowserApplication</mainClass>
-          <arguments>
-            <argument>${project.build.directory}/tools/bin/asciidoc</argument>
-          </arguments>
         </configuration>
       </plugin>
     </plugins>
